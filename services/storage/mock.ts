@@ -78,11 +78,25 @@ export class MockStorageProvider implements StorageProvider {
           height: 800,
         };
       } catch (err) {
-        console.warn('[MockStorageProvider] Không thể ghi file vào ổ đĩa cục bộ, chuyển sang URL placeholder:', err);
+        console.warn('[MockStorageProvider] Không thể ghi file vào ổ đĩa cục bộ (có thể do môi trường Serverless/Vercel read-only):', err);
       }
     }
 
-    // Fallback: Structured Mock URL sang trọng
+    // Fallback thông minh: Nếu không ghi được vào ổ đĩa (Vercel Serverless read-only),
+    // chuyển đổi tệp thành Data URI Base64 để ảnh thực tế của người dùng được lưu trữ và hiển thị 100% chính xác
+    if (fileBuffer.length <= 4.5 * 1024 * 1024) {
+      const dataUri = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+      return {
+        url: dataUri,
+        publicId,
+        sizeBytes: fileBuffer.length,
+        mimeType,
+        width: 800,
+        height: 800,
+      };
+    }
+
+    // Fallback cuối cùng: Structured Mock URL sang trọng nếu tệp quá lớn
     const hash = Math.abs(sanitizedFileName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0));
     const fallbackImage = LUXURY_SALON_FALLBACK_IMAGES[hash % LUXURY_SALON_FALLBACK_IMAGES.length];
     const structuredUrl = `${fallbackImage}&mock_id=${publicId}`;

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import fs from 'fs';
+import path from 'path';
 import { prisma } from '@/lib/prisma';
 import { verifySession, extractAuthToken } from '@/lib/auth';
 import { SiteSettingsUpdateSchema, serializeSettings } from '@/lib/validations/settings';
@@ -83,34 +85,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  const stored = memoryStore.getSiteSettings();
-  if (stored) {
-    return NextResponse.json(serializeSettings(stored), {
-      headers: { 'Cache-Control': 'no-store, max-age=0' },
-    });
-  }
-
   let setting: any = null;
   try {
-    setting = await withDbTimeout(
-      prisma.siteSetting.findUnique({
-        where: { id: 'default_setting' },
-      }),
-      1000
-    );
+    setting = await prisma.siteSetting.findUnique({
+      where: { id: 'default_setting' },
+    });
 
     if (!setting) {
-      setting = await withDbTimeout(
-        prisma.siteSetting.create({
-          data: DEFAULT_SETTINGS,
-        }),
-        1000
-      );
+      setting = await prisma.siteSetting.create({
+        data: DEFAULT_SETTINGS,
+      });
     }
     if (setting) {
       memoryStore.setSiteSettings(setting);
     }
   } catch (error) {
+    console.warn('[Settings GET] DB query warning, falling back to cache:', error);
     setting = memoryStore.getSiteSettings() || inMemorySettings || DEFAULT_SETTINGS;
   }
 
@@ -142,24 +132,17 @@ export async function PUT(request: NextRequest) {
 
   const input = parseResult.data;
 
-  // Retrieve existing settings
+  // Retrieve existing settings from DB or memory fallback
   let current: any = memoryStore.getSiteSettings() || inMemorySettings || DEFAULT_SETTINGS;
-  let isDbAvailable = false;
-  if (!isDbDown()) {
-    try {
-      const dbSetting = await withDbTimeout(
-        prisma.siteSetting.findUnique({
-          where: { id: 'default_setting' },
-        }),
-        600
-      );
-      if (dbSetting) {
-        current = dbSetting;
-        isDbAvailable = true;
-      }
-    } catch {
-      markDbDown();
+  try {
+    const dbSetting = await prisma.siteSetting.findUnique({
+      where: { id: 'default_setting' },
+    });
+    if (dbSetting) {
+      current = dbSetting;
     }
+  } catch (err) {
+    console.warn('[Settings PUT] DB fetch warning:', err);
   }
 
   // Deep merge nested fields with defaults so partial updates preserve sibling fields (TC2.20 / VULN-M2-01)
@@ -239,30 +222,38 @@ export async function PUT(request: NextRequest) {
     updatedAt: new Date(),
   };
 
-  if (isDbAvailable && !isDbDown()) {
-    try {
-      const dbUpdated = await withDbTimeout(
-        prisma.siteSetting.upsert({
-          where: { id: 'default_setting' },
-          update: updateData,
-          create: {
-            id: 'default_setting',
-            ...current,
-            ...updateData,
-          },
-        }),
-        800
-      );
-      if (dbUpdated) updated = dbUpdated;
-    } catch (dbErr) {
-      markDbDown();
-      console.warn('[Site Settings API] DB update fallback:', dbErr);
-    }
+  try {
+    const dbUpdated = await prisma.siteSetting.upsert({
+      where: { id: 'default_setting' },
+      update: updateData,
+      create: {
+        id: 'default_setting',
+        ...current,
+        ...updateData,
+      },
+    });
+    if (dbUpdated) updated = dbUpdated;
+  } catch (dbErr) {
+    console.error('[Site Settings API] DB update fallback:', dbErr);
   }
 
   // Keep in-memory and disk fallback states updated and synchronized
   memoryStore.setSiteSettings(updated);
   inMemorySettings = updated;
+
+  // Also write to data/site-settings.json on disk for persistent mock storage if disk is writable
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'site-settings.json');
+    fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf-8');
+  } catch (fsErr) {
+    // Disk write might fail in read-only environment like Vercel
+  }
+
+  // Trigger cache revalidation on public pages
+  try {
+    revalidatePath('/', 'layout');
+    revalidatePath('/');
+  } catch {}
 
   // Record audit event asynchronously without blocking response
   logAuditEvent({
