@@ -1,0 +1,549 @@
+// =============================================================================
+// Prisma Schema - Lumière Hair Atelier
+// Database: PostgreSQL (Vercel Postgres / Neon / Supabase)
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// =============================================================================
+// 1. AUTHENTICATION & RBAC (4 ROLES)
+// =============================================================================
+
+enum RoleName {
+  SUPER_ADMIN
+  CONTENT_ADMIN
+  BOOKING_STAFF
+  EDITOR
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        RoleName @unique
+  description String?
+  permissions Json     // Array of granted permissions, e.g. ["*"], ["bookings:read", "bookings:update"]
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  passwordHash    String
+  fullName        String
+  phone           String?
+  avatarUrl       String?
+  isActive        Boolean        @default(true)
+  
+  // RBAC relation
+  roleId          String
+  role            Role           @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  
+  // Stylist profile attributes
+  isStylist       Boolean        @default(false)
+  bio             String?        @db.Text
+  experienceYears Int?
+  specialties     String[]       // Native Postgres text[]
+  
+  // Entity relations
+  sessions        Session[]
+  articles        Article[]      @relation("ArticleAuthor")
+  assignedBookings Booking[]     @relation("StylistBookings")
+  beforeAfterWorks BeforeAfter[] @relation("StylistBeforeAfter")
+  auditLogs       AuditLog[]     @relation("AuditActor")
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([roleId])
+  @@index([email])
+  @@index([isStylist])
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// =============================================================================
+// 2. TAXONOMY & CATEGORIES
+// =============================================================================
+
+enum CategoryType {
+  HAIRSTYLE
+  SERVICE
+  ARTICLE
+}
+
+model Category {
+  id           String        @id @default(uuid())
+  name         String
+  slug         String        @unique
+  description  String?       @db.Text
+  type         CategoryType  @default(HAIRSTYLE)
+  imageUrl     String?
+  displayOrder Int           @default(0)
+  isActive     Boolean       @default(true)
+
+  hairstyles   Hairstyle[]
+  services     Service[]
+  articles     Article[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([type, isActive])
+  @@index([displayOrder])
+  @@map("categories")
+}
+
+// =============================================================================
+// 3. HAIRSTYLE CATALOG & ATTRIBUTES
+// =============================================================================
+
+enum GenderTarget {
+  MALE
+  FEMALE
+  UNISEX
+}
+
+enum HairLength {
+  VERY_SHORT
+  SHORT
+  MEDIUM
+  LONG
+  EXTRA_LONG
+}
+
+enum FaceShape {
+  OVAL
+  ROUND
+  SQUARE
+  HEART
+  DIAMOND
+  OBLONG
+  ALL
+}
+
+enum HairTexture {
+  STRAIGHT
+  WAVY
+  CURLY
+  COILY
+  FINE
+  THICK
+}
+
+enum CareEffort {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum StyleVibe {
+  KOREAN
+  JAPANESE
+  CLASSIC
+  MINIMALIST
+  STREETWEAR
+  BUSINESS
+  AVANT_GARDE
+}
+
+model Hairstyle {
+  id              String        @id @default(uuid())
+  title           String
+  slug            String        @unique
+  summary         String?       @db.VarChar(500)
+  description     String        @db.Text
+  coverImageUrl   String
+  galleryImages   String[]      // Multi-angle photo array
+  
+  // Multi-criteria filter dimensions
+  gender          GenderTarget  @default(UNISEX)
+  length          HairLength    @default(MEDIUM)
+  suitableFaces   FaceShape[]   // Native Postgres enum array
+  suitableTexture HairTexture[] // Native Postgres enum array
+  careEffort      CareEffort    @default(MEDIUM)
+  styleVibe       StyleVibe     @default(KOREAN)
+  
+  // Advice and pricing
+  careAdvice      String?       @db.Text
+  stylingTips     String?       @db.Text
+  priceRefMin     Decimal?      @db.Decimal(12, 2)
+  priceRefMax     Decimal?      @db.Decimal(12, 2)
+  
+  // Flags & telemetry
+  isTrending      Boolean       @default(false)
+  isFeatured      Boolean       @default(false)
+  isActive        Boolean       @default(true)
+  viewCount       Int           @default(0)
+
+  // Category relation
+  categoryId      String
+  category        Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  // Relational links
+  services        Service[]     // Implicit M:N with Service
+  beforeAfters    BeforeAfter[]
+  bookings        Booking[]     @relation("BookingReferencedStyle")
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([gender, length, careEffort])
+  @@index([isTrending, isFeatured])
+  @@index([categoryId])
+  @@index([isActive])
+  @@map("hairstyles")
+}
+
+// =============================================================================
+// 4. HAIR COLOR SWATCHES & CONSULTATION
+// =============================================================================
+
+enum ColorTone {
+  WARM
+  COOL
+  NEUTRAL
+}
+
+enum ColorGroup {
+  BROWN
+  BLONDE
+  RED_BURGUNDY
+  ASH_SMOKY
+  PASTEL
+  BLACK_DARK
+  FASHION_VIBRANT
+}
+
+model HairColor {
+  id                String      @id @default(uuid())
+  name              String
+  code              String      @unique // e.g. "ASH-8.1", "MOCHA-6.1"
+  hexColor          String      // Primary HEX code e.g. "#59493E"
+  secondaryHex      String?     // Undertone HEX e.g. "#A89F91"
+  tone              ColorTone   @default(NEUTRAL)
+  group             ColorGroup  @default(BROWN)
+  brightnessLevel   Int         @default(6) // Scale 1 - 10
+  
+  requiresBleach    Boolean     @default(false)
+  bleachRounds      Int         @default(0) // 0, 1, 2, 3
+  suitableSkinTones String[]    // e.g. ["Da sáng", "Da trung tính", "Da ngăm"]
+  maintenanceLevel  CareEffort  @default(MEDIUM)
+  colorFadingAdvice String?     @db.Text
+  swatchImageUrl    String?
+  samplePortraitUrl String?
+  
+  isTrending        Boolean     @default(false)
+  isActive          Boolean     @default(true)
+  displayOrder      Int         @default(0)
+
+  bookings          Booking[]   @relation("BookingReferencedColor")
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([tone, group, requiresBleach])
+  @@index([isTrending, isActive])
+  @@map("hair_colors")
+}
+
+// =============================================================================
+// 5. SERVICES & COMBOS
+// =============================================================================
+
+model Service {
+  id              String        @id @default(uuid())
+  title           String
+  slug            String        @unique
+  shortSummary    String?       @db.VarChar(500)
+  description     String        @db.Text
+  durationMinutes Int           @default(45)
+  priceMin        Decimal       @db.Decimal(12, 2)
+  priceMax        Decimal?      @db.Decimal(12, 2)
+  preCareAdvice   String?       @db.Text
+  postCareAdvice  String?       @db.Text
+  imageUrl        String?
+  isPopular       Boolean       @default(false)
+  isActive        Boolean       @default(true)
+  displayOrder    Int           @default(0)
+
+  categoryId      String
+  category        Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  hairstyles      Hairstyle[]   // Implicit M:N
+  combos          ServiceCombo[] // Implicit M:N
+  bookings        Booking[]
+  beforeAfters    BeforeAfter[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([categoryId, isActive])
+  @@index([isPopular])
+  @@index([displayOrder])
+  @@map("services")
+}
+
+model ServiceCombo {
+  id              String        @id @default(uuid())
+  title           String
+  slug            String        @unique
+  description     String        @db.Text
+  packagePrice    Decimal       @db.Decimal(12, 2)
+  originalPrice   Decimal       @db.Decimal(12, 2)
+  durationMinutes Int           @default(120)
+  savingsPercent  Int?
+  imageUrl        String?
+  isActive        Boolean       @default(true)
+  isFeatured      Boolean       @default(false)
+  displayOrder    Int           @default(0)
+
+  services        Service[]     // Implicit M:N
+  bookings        Booking[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([isActive, isFeatured])
+  @@index([displayOrder])
+  @@map("service_combos")
+}
+
+// =============================================================================
+// 6. BEFORE & AFTER SHOWCASE
+// =============================================================================
+
+model BeforeAfter {
+  id             String        @id @default(uuid())
+  title          String
+  description    String?       @db.Text
+  beforeImageUrl String
+  afterImageUrl  String
+  customerGender GenderTarget  @default(UNISEX)
+  
+  serviceId      String?
+  service        Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  
+  hairstyleId    String?
+  hairstyle      Hairstyle?    @relation(fields: [hairstyleId], references: [id], onDelete: SetNull)
+  
+  stylistId      String?
+  stylist        User?         @relation("StylistBeforeAfter", fields: [stylistId], references: [id], onDelete: SetNull)
+
+  isFeatured     Boolean       @default(false)
+  displayOrder   Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([serviceId, hairstyleId])
+  @@index([isFeatured])
+  @@index([displayOrder])
+  @@map("before_afters")
+}
+
+// =============================================================================
+// 7. ONLINE BOOKING SYSTEM (5 STATES)
+// =============================================================================
+
+enum BookingStatus {
+  PENDING      // Chờ xác nhận
+  CONFIRMED    // Đã xác nhận lịch
+  COMPLETED    // Đã hoàn thành dịch vụ
+  CANCELLED    // Đã hủy lịch
+  NO_SHOW      // Khách không đến
+}
+
+model Booking {
+  id                 String        @id @default(uuid())
+  bookingCode        String        @unique // e.g. "LMR-20261019-XXXX"
+  
+  customerName       String
+  customerPhone      String
+  customerEmail      String?
+  
+  bookingDate        DateTime      @db.Date
+  timeSlot           String        // e.g. "09:30", "14:00"
+  
+  serviceId          String?
+  service            Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  
+  comboId            String?
+  combo              ServiceCombo? @relation(fields: [comboId], references: [id], onDelete: SetNull)
+  
+  hairstyleRefId     String?
+  hairstyleRef       Hairstyle?    @relation("BookingReferencedStyle", fields: [hairstyleRefId], references: [id], onDelete: SetNull)
+  
+  hairColorRefId     String?
+  hairColorRef       HairColor?    @relation("BookingReferencedColor", fields: [hairColorRefId], references: [id], onDelete: SetNull)
+  
+  assignedStylistId  String?
+  assignedStylist    User?         @relation("StylistBookings", fields: [assignedStylistId], references: [id], onDelete: SetNull)
+  
+  status             BookingStatus @default(PENDING)
+  notes              String?       @db.Text
+  internalNotes      String?       @db.Text
+  estimatedPrice     Decimal?      @db.Decimal(12, 2)
+  cancellationReason String?
+  
+  // Anti-duplicate submission token
+  idempotencyKey     String?       @unique
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([bookingDate, status])
+  @@index([customerPhone])
+  @@index([assignedStylistId])
+  @@index([createdAt])
+  @@map("bookings")
+}
+
+// =============================================================================
+// 8. BANNERS & PROMOTIONS
+// =============================================================================
+
+model Banner {
+  id             String    @id @default(uuid())
+  title          String
+  subtitle       String?
+  badgeText      String?   // e.g. "XU HƯỚNG 2026", "ƯU ĐÃI ĐẶC QUYỀN"
+  imageUrl       String    // Desktop banner image
+  mobileImageUrl String?   // Mobile-optimized image
+  linkUrl        String?
+  ctaText        String?   @default("Khám phá ngay")
+  displayOrder   Int       @default(0)
+  isActive       Boolean   @default(true)
+  startDate      DateTime?
+  endDate        DateTime?
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([isActive, displayOrder])
+  @@map("banners")
+}
+
+// =============================================================================
+// 9. BLOG ARTICLES & ADVICE
+// =============================================================================
+
+model Article {
+  id              String    @id @default(uuid())
+  title           String
+  slug            String    @unique
+  excerpt         String    @db.VarChar(500)
+  content         String    @db.Text
+  coverImageUrl   String
+  tags            String[]
+  
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+
+  authorId        String
+  author          User      @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  isPublished     Boolean   @default(false)
+  publishedAt     DateTime?
+  viewCount       Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([isPublished, publishedAt])
+  @@index([slug])
+  @@index([categoryId])
+  @@map("articles")
+}
+
+// =============================================================================
+// 10. DYNAMIC SITE SETTINGS
+// =============================================================================
+
+model SiteSetting {
+  id                  String   @id @default("default_setting")
+  brandName           String   @default("Lumière Hair Atelier")
+  brandSlogan         String?  @default("Định Hình Khí Chất - Tỏa Sáng Phong Cách")
+  logoUrl             String?
+  faviconUrl          String?
+  hotlinePrimary      String   @default("0908123456")
+  hotlineSecondary    String?
+  emailContact        String   @default("contact@lumierehair.vn")
+  addressFull         String   @default("128 Pasteur, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh")
+  googleMapsEmbedUrl  String?  @db.Text
+  
+  // Structured JSON fields
+  openingHours        Json     // { monday_friday: "08:30 - 21:00", weekend: "08:00 - 21:30" }
+  socialLinks         Json     // { facebook: "...", instagram: "...", tiktok: "...", zalo: "..." }
+  defaultSeoMetadata  Json     // { title: "...", description: "...", ogImage: "..." }
+  footerContent       Json     // { copyright: "...", licenseText: "...", taxCode: "..." }
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// =============================================================================
+// 11. AUDIT LOGS
+// =============================================================================
+
+enum AuditAction {
+  AUTH_LOGIN
+  AUTH_LOGOUT
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+  SECURITY_VIOLATION
+}
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  actorId    String?
+  actorEmail String?
+  actorName  String?
+  actorRole  String?
+  actor      User?       @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  
+  action     AuditAction
+  entityType String      // "Booking", "Hairstyle", "Service", "Setting", "User"
+  entityId   String?
+  details    Json?       // Changed fields, before/after values, context metadata
+  ipAddress  String?
+  userAgent  String?
+
+  createdAt  DateTime    @default(now())
+
+  @@index([action, entityType])
+  @@index([createdAt])
+  @@index([actorId])
+  @@map("audit_logs")
+}

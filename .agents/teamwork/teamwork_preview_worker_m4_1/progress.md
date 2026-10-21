@@ -1,0 +1,65 @@
+# Progress — Milestone 4 Implementation Worker
+
+Last visited: 2026-10-19T20:17:00Z
+Status: Completed
+
+## Tasks
+- [x] Read DISPATCH.md and initialize BRIEFING.md / progress.md
+- [x] Read and analyze inputs (ORIGINAL_REQUEST.md, PROJECT.md, Explorer 1, 2, 3 Blueprints)
+- [x] Implement Public Data Access Layer (`lib/public-data.ts`) with DB resilience & fallback
+- [x] Implement Public REST APIs (`app/api/public/*`):
+  - [x] `app/api/public/home/route.ts` (TC1.1 compliance)
+  - [x] `app/api/public/hairstyles/route.ts` (TC1.2 6D filtering)
+  - [x] `app/api/public/hairstyles/[slug]/route.ts` (TC1.3 detail & 404)
+  - [x] `app/api/public/colors/route.ts` (TC1.4 swatch catalog)
+  - [x] `app/api/public/services/route.ts` (TC1.5 price tiers & duration)
+  - [x] `app/api/public/articles/route.ts` (TC1.6 SEO metadata)
+  - [x] `app/api/public/articles/[slug]/route.ts`
+  - [x] `app/api/public/before-after/route.ts`
+- [x] Implement Layout & Core Public Components:
+  - [x] `components/public/MarkdownRenderer.tsx`
+  - [x] `components/public/MobileDrawer.tsx`
+  - [x] `components/public/PublicHeader.tsx`
+  - [x] `components/public/PublicFooter.tsx`
+  - [x] `app/(public)/layout.tsx`
+- [x] Implement Dynamic Home Page (`app/(public)/page.tsx` with 8 dynamic sections):
+  - [x] `components/public/home/HeroBannerSlider.tsx`
+  - [x] `components/public/home/QuickCategories.tsx`
+  - [x] `components/public/home/TrendingHairstyles.tsx`
+  - [x] `components/public/home/MiniBeforeAfter.tsx`
+  - [x] `components/public/home/MasterStylists.tsx`
+  - [x] `components/public/home/Testimonials.tsx`
+  - [x] `components/public/home/LatestArticles.tsx`
+  - [x] `components/public/home/DualCtaSection.tsx`
+  - [x] Removed conflicting `app/page.tsx`
+- [x] Implement Hairstyle Exploration Library (`app/(public)/hairstyles/page.tsx`, `HairstyleCatalogClient.tsx`, `[slug]/page.tsx`):
+  - [x] 6-Dimensional multi-filter (Gender, Length, Face Shape, Style, Curl, Bleach)
+  - [x] URL query synchronization & local favorites
+  - [x] Detail view with specs, face shape suitability, styling tips, color pairings
+- [x] Implement Hair Color Swatches (`app/(public)/colors/page.tsx`, `ColorCatalogClient.tsx`):
+  - [x] Metallic sheen swatches, 10-level brightness slider
+  - [x] Tone classification tabs (WARM, COOL, NEUTRAL)
+  - [x] Bleach toggle & skin tone consultation matrix
+- [x] Implement Before/After Showcase (`app/(public)/before-after/page.tsx`, `BeforeAfterShowcaseClient.tsx`, `BeforeAfterSlider.tsx`):
+  - [x] Interactive touch & mouse drag divider
+  - [x] Customer gender filtering & linked service badges
+- [x] Implement Services & Pricing (`app/(public)/services/page.tsx`, `ServicesCatalogClient.tsx`):
+  - [x] Individual service tiers & duration badges
+  - [x] VIP combo packages with savings calculation
+  - [x] Pre/post care advice accordions & 4 salon guarantees
+- [x] Implement 5-Step Booking Wizard (`app/(public)/booking/page.tsx`, `BookingWizardClient.tsx`):
+  - [x] 5-step wizard state machine (Service -> Hairstyle -> Stylist -> Time -> Customer)
+  - [x] Operating hours enforcement (08:30 - 20:30, 30-min slots)
+  - [x] Client Zod validation (`CreateBookingSchema`) with Vietnamese phone regex
+  - [x] Anti-duplicate client-side idempotency lock
+- [x] Implement Blog & Editorial CMS (`app/(public)/blog/page.tsx`, `app/(public)/blog/[slug]/page.tsx`, `BlogCatalogClient.tsx`):
+  - [x] Tag filtering, keyword search, pagination
+  - [x] Open Graph meta tags & semantic markdown rendering
+- [x] Wrapped CSR bailout client components in `<Suspense>` boundaries
+- [x] Create and run `tests/challenge_m4_harness.ts` (81/81 assertions PASS 100%)
+- [x] Full verification suite:
+  - [x] `npx prisma validate` (Valid)
+  - [x] `npx tsc --noEmit` (0 errors)
+  - [x] `npm run test:e2e` (67/67 PASS 100%)
+  - [x] `npm run build` (Exit 0, 38/38 routes generated)
+- [x] Write `handoff.md` and report to orchestrator via `send_message`

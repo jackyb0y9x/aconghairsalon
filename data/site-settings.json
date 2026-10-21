@@ -1,0 +1,38 @@
+{
+  "id": "default_setting",
+  "brandName": "ACoong Hair Salon",
+  "brandSlogan": "Định Hình Khí Chất - Tỏa Sáng Phong Cách",
+  "logoUrl": "/uploads/brand/1792572842701_Logo_k_o_v_ng_ACoong_sang_tr_ng.png",
+  "faviconUrl": "/uploads/brand/1792572543690_logotoc-removebg-preview.png",
+  "hotlinePrimary": "0981438118",
+  "hotlineSecondary": "0981438118",
+  "emailContact": "contact@congnguyenhair.vn",
+  "addressFull": "Nguyệt Áng 3, An Khánh, Hải Phòng",
+  "googleMapsEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d479.93252252100655!2d106.61087903989699!3d20.78488568895623!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314a76dcf205a86d%3A0xf613dd1e2cbc6902!2zTmd1eeG7h3QgQW5nLCBUaMOhaSBTxqFuLCBBbiBMw6NvLCBI4bqjaSBQaMOybmcsIFZp4buHdCBOYW0!5e0!3m2!1svi!2s!4v1792572457657!5m2!1svi!2s",
+  "openingHours": {
+    "rawText": "08:30 - 20:30 Hàng ngày",
+    "weekend": "08:00 - 21:30",
+    "holiday_notes": "Mở cửa phục vụ xuyên suốt tất cả các ngày lễ trong năm",
+    "monday_friday": "08:30 - 20:30 Hàng ngày",
+    "saturday_sunday": "08:00 - 21:00"
+  },
+  "socialLinks": {
+    "zalo": "",
+    "tiktok": "",
+    "youtube": "https://youtube.com/@congnguyenhairsalon",
+    "facebook": "",
+    "instagram": ""
+  },
+  "defaultSeoMetadata": {
+    "title": "aCoong Hair Salon | Salon Tóc Nam & Nữ Hiện Đại",
+    "ogImage": "/images/og-default.jpg",
+    "keywords": "salon toc hai phong, cong nguyen hair salon, an khanh hai phong, cat toc nam nu, uon toc dep, nhuom toc dep",
+    "ogImageUrl": "/images/brand/og-cover.jpg",
+    "description": "Salon tóc Nam và Nữ cao cấp tại Nguyệt Áng 3, An Khánh, Hải Phòng. Đội ngũ thợ tay nghề cao, cập nhật xu hướng tóc châu Á và công nghệ thử màu tóc trực tuyến."
+  },
+  "footerContent": {
+    "copyright": "© 2026 Công Nguyễn Hair Salon. All rights reserved."
+  },
+  "updatedAt": "2026-10-21T09:02:15.622Z",
+  "createdAt": "2026-10-21T07:29:36.589Z"
+}

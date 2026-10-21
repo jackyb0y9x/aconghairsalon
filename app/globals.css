@@ -1,0 +1,280 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* LIGHT MODE PALETTE (Không chói, tương phản nổi bật, bố cục sắc nét) */
+    --background: 38 20% 92%;           /* #ECE7E0 Alabaster Sand / Vải lanh ngà dịu mắt, hoàn toàn không bị chói lóa */
+    --foreground: 222 35% 14%;           /* #17202E Obsidian Slate / Đen than thanh lịch, tương phản vượt trội 10.8:1 */
+    
+    /* Salon Custom Design Tokens in LIGHT MODE */
+    --salon-noir: 38 20% 92%;            /* Canvas nền trang dịu mát (#ECE7E0) */
+    --salon-charcoal: 0 0% 100%;         /* Thẻ Card, Section, Modal trắng tinh khôi (#FFFFFF) tương phản mạnh 8% */
+    --salon-ivory: 222 35% 14%;          /* Chữ chính đen than sắc nét (#17202E) */
+    --salon-surface: 38 18% 85%;         /* Bề mặt ô input, tabs không hoạt động, filter pills (#DDD8CD) */
+
+    --card: 0 0% 100%;                   /* Card nổi bật trên nền canvas */
+    --card-foreground: 222 35% 14%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 35% 14%;
+    
+    --primary: 41 78% 42%;              /* #BD8814 Vàng đồng hoàng gia Haute Couture, sắc nét trên nền sáng */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 38 18% 87%;
+    --secondary-foreground: 222 35% 14%;
+    
+    --muted: 38 16% 88%;
+    --muted-foreground: 220 16% 40%;     /* #566275 Chữ phụ rõ ràng, không bị mờ nhạt */
+    
+    --accent: 41 78% 42%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 38 18% 80%;               /* Đường viền dải phân cách sắc sảo (#D1CBBF) */
+    --input: 38 18% 80%;
+    --ring: 41 78% 42%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* DARK MODE PALETTE (Không tối quá, than chì êm dịu, chiều sâu sang trọng) */
+    --background: 222 18% 13%;          /* #191F2B Graphite Twilight / Không tối đen mù mịt, mắt nhìn rất êm */
+    --foreground: 40 25% 95%;           /* #F7F4EE Trắng ngà ấm, dịu nhẹ cho mắt */
+    
+    /* Salon Custom Design Tokens in DARK MODE */
+    --salon-noir: 222 18% 13%;           /* Nền trang than chì sâu (#191F2B) */
+    --salon-charcoal: 222 16% 20%;       /* Bề mặt thẻ card có độ nổi (+7% lightness #273040) */
+    --salon-ivory: 40 25% 95%;          /* Chữ sáng ấm tự nhiên (#F7F4EE) */
+    --salon-surface: 222 15% 26%;       /* Khối lồng bên trong, input, badge (+6% lightness #343E51) */
+
+    --card: 222 16% 20%;                /* #273040 Khối Card tách bạch với nền trang */
+    --card-foreground: 40 25% 95%;
+    
+    --popover: 222 16% 20%;
+    --popover-foreground: 40 25% 95%;
+    
+    --primary: 43 68% 52%;              /* #D7B035 Vàng Champagne rực rỡ */
+    --primary-foreground: 222 35% 14%;
+    
+    --secondary: 222 16% 23%;
+    --secondary-foreground: 40 25% 95%;
+    
+    --muted: 222 16% 23%;
+    --muted-foreground: 218 14% 68%;    /* #9DA8B9 Chữ phụ xám xanh sáng rõ */
+    
+    --accent: 43 68% 52%;
+    --accent-foreground: 222 35% 14%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 222 14% 24%;              /* #343E4E Đường viền card rõ nét */
+    --input: 222 14% 24%;
+    --ring: 43 68% 52%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  ::selection {
+    background-color: rgba(212, 175, 55, 0.35);
+    color: #17202E;
+  }
+}
+
+@layer utilities {
+  .glass-luxury {
+    background: rgba(39, 48, 64, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.22);
+  }
+
+  .glass-light {
+    background: rgba(43, 53, 70, 0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(212, 175, 55, 0.18);
+  }
+
+  /* Light mode adaptive styling */
+  html:not(.dark) .glass-luxury {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(180, 140, 50, 0.28);
+    box-shadow: 0 8px 30px -8px rgba(60, 45, 20, 0.08);
+  }
+
+  html:not(.dark) .glass-light {
+    background: rgba(245, 242, 236, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(180, 140, 50, 0.24);
+  }
+
+  /* Gold text gradient: luminous champagne & white gold in dark mode, rich warm amber gold in light mode */
+  .gold-text-gradient,
+  .page-hero-title {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E7 25%, #FDE68A 65%, #F59E0B 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 2px 10px rgba(253, 224, 71, 0.25));
+  }
+
+  html:not(.dark) .gold-text-gradient,
+  html:not(.dark) .page-hero-title {
+    background: linear-gradient(135deg, #8C5B00 0%, #B8860B 45%, #6B4600 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: none !important;
+  }
+
+  /* Automatic bright tone in dark mode for any title/text using from-salon-gold-light via-salon-gold to-salon-gold-dark */
+  .dark .from-salon-gold-light.via-salon-gold.to-salon-gold-dark,
+  .dark [class*="from-salon-gold-light"][class*="via-salon-gold"][class*="to-salon-gold-dark"] {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E7 25%, #FDE68A 65%, #F59E0B 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 2px 10px rgba(253, 224, 71, 0.25));
+  }
+
+  html:not(.dark) .from-salon-gold-light.via-salon-gold.to-salon-gold-dark,
+  html:not(.dark) [class*="from-salon-gold-light"][class*="via-salon-gold"][class*="to-salon-gold-dark"] {
+    background: linear-gradient(135deg, #8C5B00 0%, #B8860B 45%, #6B4600 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: none !important;
+  }
+
+  /* Hero Banner Slider: Always bright, luminous, ultra-readable on dark background across all themes */
+  .hero-banner-slider,
+  .hero-banner-slider * {
+    color-scheme: dark;
+  }
+
+  .hero-banner-slider h1,
+  .hero-banner-slider h1 span,
+  .hero-banner-slider .hero-banner-title {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E7 25%, #FDE68A 65%, #F59E0B 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.95)) !important;
+  }
+
+  .hero-banner-slider p,
+  .hero-banner-slider .hero-banner-subtitle {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95) !important;
+    opacity: 0.98 !important;
+    font-weight: 400 !important;
+  }
+
+  /* Contrast enhancements for typography in light mode */
+  html:not(.dark) .text-white:not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-emerald"]):not([class*="bg-salon-gold"]):not([class*="hero-banner-slider"] *):not([class*="hero-banner"] *) {
+    color: #17202E;
+  }
+
+  html:not(.dark) .text-neutral-200:not([class*="hero-banner-slider"] *) {
+    color: #334155;
+  }
+
+  html:not(.dark) .text-neutral-300:not([class*="hero-banner-slider"] *),
+  html:not(.dark) .text-zinc-300:not([class*="hero-banner-slider"] *) {
+    color: #334155;
+  }
+
+  html:not(.dark) .text-neutral-400:not([class*="hero-banner-slider"] *),
+  html:not(.dark) .text-zinc-400:not([class*="hero-banner-slider"] *) {
+    color: #526071;
+  }
+
+  html:not(.dark) .text-neutral-500:not([class*="hero-banner-slider"] *),
+  html:not(.dark) .text-zinc-500:not([class*="hero-banner-slider"] *) {
+    color: #64748B;
+  }
+
+  /* Contrast gold text in light mode */
+  html:not(.dark) .text-salon-gold-light:not([class*="hero-banner-slider"] *) {
+    color: #8C6506;
+  }
+
+  html:not(.dark) .text-salon-gold:not([class*="hero-banner-slider"] *) {
+    color: #9C7205;
+  }
+
+  /* Buttons with gold gradient always have crisp dark slate text */
+  [class*="from-salon-gold"],
+  .bg-salon-gold {
+    color: #0F172A !important;
+  }
+
+  /* Visible defined hairline borders in light mode */
+  html:not(.dark) .border-white\/5,
+  html:not(.dark) .border-white\/10,
+  html:not(.dark) .border-white\/15,
+  html:not(.dark) .border-white\/20,
+  html:not(.dark) .border-neutral-800,
+  html:not(.dark) .border-zinc-800 {
+    border-color: rgba(180, 140, 50, 0.22);
+  }
+
+  html:not(.dark) .border-salon-gold\/10,
+  html:not(.dark) .border-salon-gold\/15,
+  html:not(.dark) .border-salon-gold\/20 {
+    border-color: rgba(180, 140, 50, 0.28);
+  }
+
+  /* Card and section shadows in light mode */
+  html:not(.dark) .shadow-luxury-dark {
+    box-shadow: 0 10px 30px -8px rgba(60, 45, 20, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(180, 140, 50, 0.16);
+  }
+
+  html:not(.dark) .shadow-gold-glow {
+    box-shadow: 0 8px 25px -4px rgba(180, 140, 50, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  html:not(.dark) .shadow-gold-subtle {
+    box-shadow: 0 2px 10px -2px rgba(180, 140, 50, 0.2);
+  }
+
+  .gold-border-gradient {
+    border-image: linear-gradient(135deg, #D4AF37, #F3E5AB, #AA820A) 1;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--salon-noir));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3E4A5C;
+    border-radius: 4px;
+    border: 2px solid hsl(var(--salon-noir));
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #D4AF37;
+  }
+}
