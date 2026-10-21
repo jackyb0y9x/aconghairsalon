@@ -6,6 +6,7 @@ import { HairstyleUpdateSchema, serializeHairstyle } from '@/lib/validations/con
 import { memoryStore } from '@/lib/memory-store';
 import { slugify } from '@/lib/utils';
 import { safeRevalidatePath } from '@/lib/safe-revalidate';
+import { DEFAULT_HAIRSTYLES } from '@/lib/public-data';
 import { FaceShape, HairTexture, CareEffort, StyleVibe } from '@prisma/client';
 
 export async function GET(
@@ -31,6 +32,12 @@ export async function GET(
     });
   } catch {
     style = memoryStore.findHairstyleById(id) || memoryStore.hairstyles.find((h) => h.slug === id);
+  }
+
+  if (!style) {
+    style = DEFAULT_HAIRSTYLES.find(
+      (h: any) => h.id === id || h.slug === id || slugify(h.name || h.title) === slugify(id)
+    );
   }
 
   if (!style) {
@@ -66,7 +73,13 @@ export async function PUT(
   }
 
   if (!existing) {
-    return NextResponse.json({ error: 'Hairstyle not found' }, { status: 404 });
+    existing = DEFAULT_HAIRSTYLES.find(
+      (h: any) => h.id === id || h.slug === id || slugify(h.name || h.title) === slugify(id)
+    );
+  }
+
+  if (!existing) {
+    existing = { id, slug: slugify(id), title: id };
   }
 
   const body = await request.json().catch(() => ({}));
@@ -166,16 +179,59 @@ function mapCareEffort(careVal?: string): CareEffort {
 
   let updatedStyle: any;
   try {
-    updatedStyle = await prisma.hairstyle.update({
-      where: { id: existing.id },
-      data: updateData,
-      include: {
-        category: true,
-        services: true,
-      },
-    });
+    if (existing && existing.createdAt) {
+      updatedStyle = await prisma.hairstyle.update({
+        where: { id: existing.id },
+        data: updateData,
+        include: {
+          category: true,
+          services: true,
+        },
+      });
+    } else {
+      throw new Error('Hairstyle not in database, creating in database');
+    }
   } catch {
-    updatedStyle = memoryStore.updateHairstyle(existing.id, updateData);
+    // If not in database yet (e.g. from DEFAULT_HAIRSTYLES catalog), create it in DB so it persists forever
+    let catId = updateData.categoryId || existing?.categoryId;
+    if (!catId) {
+      const firstCat = await prisma.category.findFirst({ where: { type: 'HAIRSTYLE' } });
+      catId = firstCat?.id;
+    }
+
+    try {
+      updatedStyle = await prisma.hairstyle.create({
+        data: {
+          title: updateData.title || existing?.title || existing?.name || 'Kiểu Tóc Mới',
+          slug: updateData.slug || slugify(updateData.title || existing?.title || id),
+          summary: updateData.summary || existing?.summary || null,
+          description: updateData.description || existing?.description || 'Mô tả kiểu tóc',
+          coverImageUrl: updateData.coverImageUrl || existing?.coverImageUrl || '/images/default-hair.jpg',
+          galleryImages: updateData.galleryImages || existing?.galleryImages || [],
+          gender: (updateData.gender || existing?.gender || 'UNISEX') as any,
+          length: (updateData.length || existing?.length || 'MEDIUM') as any,
+          styleVibe: (updateData.styleVibe || updateData.style || existing?.styleVibe || existing?.style || 'KOREAN') as any,
+          suitableFaces: (updateData.suitableFaces || existing?.suitableFaces || ['ALL']) as any,
+          suitableTexture: (updateData.suitableTexture || existing?.suitableTexture || ['STRAIGHT']) as any,
+          careEffort: (updateData.careEffort || updateData.careLevel || 'LOW') as any,
+          priceRefMin: updateData.priceRefMin || existing?.priceRefMin || 350000,
+          priceRefMax: updateData.priceRefMax || existing?.priceRefMax || 550000,
+          careAdvice: updateData.careAdvice || existing?.careAdvice || null,
+          stylingTips: updateData.stylingTips || existing?.stylingTips || null,
+          isTrending: updateData.isTrending ?? existing?.isTrending ?? false,
+          isFeatured: updateData.isFeatured ?? existing?.isFeatured ?? false,
+          isActive: updateData.isActive ?? existing?.isActive ?? true,
+          categoryId: catId,
+        },
+        include: {
+          category: true,
+          services: true,
+        },
+      });
+    } catch (createErr) {
+      console.warn('[Hairstyle Update] Fallback creation attempt failed, using memory store:', createErr);
+      updatedStyle = memoryStore.updateHairstyle(existing.id, updateData) || { id: existing.id, ...updateData };
+    }
   }
 
   await logAuditEvent({
