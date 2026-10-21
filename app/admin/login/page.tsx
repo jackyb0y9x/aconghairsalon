@@ -19,7 +19,6 @@ function LoginForm() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
@@ -56,36 +55,6 @@ function LoginForm() {
 
   return (
     <div className="glass-luxury rounded-2xl p-6 md:p-8 shadow-luxury-dark border border-salon-gold/20 relative">
-      {/* Demo Credentials Box */}
-      <div className="mb-6 p-4 rounded-xl bg-salon-gold/10 border border-salon-gold/30 text-xs text-neutral-300 space-y-2.5">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold text-salon-gold flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" />
-            Tài Khoản Quản Trị Hệ Thống
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              setValue('email', 'admin@congnguyenhair.vn', { shouldValidate: true });
-              setValue('password', 'Admin@123456', { shouldValidate: true });
-            }}
-            className="px-2.5 py-1 rounded-md bg-salon-gold text-salon-noir font-bold text-[11px] hover:bg-salon-gold-light transition active:scale-95 shadow-sm"
-          >
-            ⚡ Điền Nhanh
-          </button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] bg-black/40 p-2.5 rounded-lg border border-salon-gold/15 font-mono">
-          <div>
-            <span className="text-neutral-400 block text-[10px]">Email đăng nhập:</span>
-            <span className="text-white font-medium select-all">admin@congnguyenhair.vn</span>
-          </div>
-          <div>
-            <span className="text-neutral-400 block text-[10px]">Mật khẩu:</span>
-            <span className="text-white font-medium select-all">Admin@123456</span>
-          </div>
-        </div>
-      </div>
-
       {/* Server Error Alert */}
       {serverError && (
         <div className="mb-6 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm flex items-start gap-3 animate-in fade-in duration-200">
@@ -109,7 +78,7 @@ function LoginForm() {
               type="email"
               autoComplete="email"
               autoFocus
-              placeholder="admin@congnguyenhair.vn"
+              placeholder="Nhập email tài khoản quản trị..."
               className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0B0F17]/60 border text-white text-sm placeholder-neutral-500 focus:outline-none transition ${
                 errors.email
                   ? 'border-red-500/60 focus:border-red-500 focus:ring-1 focus:ring-red-500'
