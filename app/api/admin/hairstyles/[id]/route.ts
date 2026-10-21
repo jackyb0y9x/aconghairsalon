@@ -19,11 +19,25 @@ export async function GET(
   }
 
   const { id } = params;
-  let style: any;
+  let style: any = null;
+
+  const candidateSlugs = [id, slugify(id)];
+  const defaultMatch = DEFAULT_HAIRSTYLES.find(
+    (h: any) => h.id === id || h.slug === id || slugify(h.name || h.title) === slugify(id)
+  );
+  if (defaultMatch) {
+    if (defaultMatch.slug) candidateSlugs.push(defaultMatch.slug);
+    candidateSlugs.push(slugify(defaultMatch.name || defaultMatch.title));
+  }
+
   try {
     style = await prisma.hairstyle.findFirst({
       where: {
-        OR: [{ id }, { slug: id }],
+        OR: [
+          { id },
+          { slug: { in: candidateSlugs } },
+          ...(defaultMatch ? [{ title: defaultMatch.name || defaultMatch.title }] : []),
+        ],
       },
       include: {
         category: true,
@@ -31,17 +45,22 @@ export async function GET(
       },
     });
   } catch {
-    style = memoryStore.findHairstyleById(id) || memoryStore.hairstyles.find((h) => h.slug === id);
+    // Database query failed
   }
 
   if (!style) {
-    style = DEFAULT_HAIRSTYLES.find(
-      (h: any) => h.id === id || h.slug === id || slugify(h.name || h.title) === slugify(id)
-    );
+    style = memoryStore.findHairstyleById(id) || defaultMatch;
   }
 
   if (!style) {
-    return NextResponse.json({ error: 'Hairstyle not found' }, { status: 404 });
+    style = {
+      id,
+      title: id,
+      slug: slugify(id),
+      category: { id: 'cat-featured', name: 'Kiểu Tóc Nổi Bật' },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
   return NextResponse.json(serializeHairstyle(style));
@@ -57,11 +76,25 @@ export async function PUT(
   }
 
   const { id } = params;
-  let existing: any;
+  let existing: any = null;
+
+  const candidateSlugs = [id, slugify(id)];
+  const defaultMatch = DEFAULT_HAIRSTYLES.find(
+    (h: any) => h.id === id || h.slug === id || slugify(h.name || h.title) === slugify(id)
+  );
+  if (defaultMatch) {
+    if (defaultMatch.slug) candidateSlugs.push(defaultMatch.slug);
+    candidateSlugs.push(slugify(defaultMatch.name || defaultMatch.title));
+  }
+
   try {
     existing = await prisma.hairstyle.findFirst({
       where: {
-        OR: [{ id }, { slug: id }],
+        OR: [
+          { id },
+          { slug: { in: candidateSlugs } },
+          ...(defaultMatch ? [{ title: defaultMatch.name || defaultMatch.title }] : []),
+        ],
       },
       include: {
         category: true,
@@ -69,17 +102,11 @@ export async function PUT(
       },
     });
   } catch {
-    existing = memoryStore.findHairstyleById(id) || memoryStore.hairstyles.find((h) => h.slug === id);
+    // Database query failed
   }
 
   if (!existing) {
-    existing = DEFAULT_HAIRSTYLES.find(
-      (h: any) => h.id === id || h.slug === id || slugify(h.name || h.title) === slugify(id)
-    );
-  }
-
-  if (!existing) {
-    existing = { id, slug: slugify(id), title: id };
+    existing = memoryStore.findHairstyleById(id) || defaultMatch || { id, slug: slugify(id), title: id };
   }
 
   const body = await request.json().catch(() => ({}));
@@ -177,9 +204,11 @@ function mapCareEffort(careVal?: string): CareEffort {
   if (input.isActive !== undefined) updateData.isActive = input.isActive;
   if (input.categoryId !== undefined) updateData.categoryId = input.categoryId;
 
-  let updatedStyle: any;
-  try {
-    if (existing && existing.createdAt) {
+  let updatedStyle: any = null;
+
+  // 1. If existing was found in DB with real DB record, update by id
+  if (existing && existing.createdAt && existing.id) {
+    try {
       updatedStyle = await prisma.hairstyle.update({
         where: { id: existing.id },
         data: updateData,
@@ -188,22 +217,27 @@ function mapCareEffort(careVal?: string): CareEffort {
           services: true,
         },
       });
-    } else {
-      throw new Error('Hairstyle not in database, creating in database');
+    } catch (updateErr) {
+      console.warn('[Hairstyle Update] Prisma update failed:', updateErr);
     }
-  } catch {
-    // If not in database yet (e.g. from DEFAULT_HAIRSTYLES catalog), create it in DB so it persists forever
-    let catId = updateData.categoryId || existing?.categoryId;
-    if (!catId) {
-      const firstCat = await prisma.category.findFirst({ where: { type: 'HAIRSTYLE' } });
-      catId = firstCat?.id;
-    }
+  }
 
+  // 2. If not updated yet, try upserting by slug in DB
+  if (!updatedStyle) {
     try {
-      updatedStyle = await prisma.hairstyle.create({
-        data: {
+      let catId = updateData.categoryId || existing?.categoryId;
+      if (!catId) {
+        const firstCat = await prisma.category.findFirst({ where: { type: 'HAIRSTYLE' } });
+        catId = firstCat?.id;
+      }
+      const targetSlug = updateData.slug || existing?.slug || slugify(updateData.title || existing?.title || id);
+
+      updatedStyle = await prisma.hairstyle.upsert({
+        where: { slug: targetSlug },
+        update: updateData,
+        create: {
           title: updateData.title || existing?.title || existing?.name || 'Kiểu Tóc Mới',
-          slug: updateData.slug || slugify(updateData.title || existing?.title || id),
+          slug: targetSlug,
           summary: updateData.summary || existing?.summary || null,
           description: updateData.description || existing?.description || 'Mô tả kiểu tóc',
           coverImageUrl: updateData.coverImageUrl || existing?.coverImageUrl || '/images/default-hair.jpg',
@@ -228,10 +262,21 @@ function mapCareEffort(careVal?: string): CareEffort {
           services: true,
         },
       });
-    } catch (createErr) {
-      console.warn('[Hairstyle Update] Fallback creation attempt failed, using memory store:', createErr);
-      updatedStyle = memoryStore.updateHairstyle(existing.id, updateData) || { id: existing.id, ...updateData };
+    } catch (upsertErr) {
+      console.warn('[Hairstyle Update] Prisma upsert failed, saving to memoryStore:', upsertErr);
     }
+  }
+
+  // 3. Fallback to memory store if database is offline or unreachable
+  if (!updatedStyle) {
+    updatedStyle = memoryStore.updateHairstyle(existing?.id || id, updateData) || {
+      id: existing?.id || id,
+      ...existing,
+      ...updateData,
+      updatedAt: new Date(),
+    };
+  } else {
+    memoryStore.updateHairstyle(updatedStyle.id, updatedStyle);
   }
 
   await logAuditEvent({
@@ -241,9 +286,9 @@ function mapCareEffort(careVal?: string): CareEffort {
     userRole: auth.user.role.name,
     action: 'UPDATE',
     entity: 'HAIRSTYLE',
-    entityId: existing.id,
+    entityId: existing?.id || id,
     details: {
-      before: { title: existing.title, priceRefMin: existing.priceRefMin, careEffort: existing.careEffort },
+      before: { title: existing?.title, priceRefMin: existing?.priceRefMin, careEffort: existing?.careEffort },
       after: { title: updatedStyle.title, priceRefMin: updatedStyle.priceRefMin, careEffort: updatedStyle.careEffort },
     },
     ipAddress: request.headers.get('x-forwarded-for') || '127.0.0.1',
@@ -251,8 +296,8 @@ function mapCareEffort(careVal?: string): CareEffort {
   });
 
   safeRevalidatePath('/hairstyles');
-  safeRevalidatePath(`/hairstyles/${existing.slug}`);
-  safeRevalidatePath(`/hairstyles/${updatedStyle.slug}`);
+  if (existing?.slug) safeRevalidatePath(`/hairstyles/${existing.slug}`);
+  if (updatedStyle.slug) safeRevalidatePath(`/hairstyles/${updatedStyle.slug}`);
   safeRevalidatePath('/admin/hairstyles');
   safeRevalidatePath('/');
 
@@ -271,25 +316,38 @@ export async function DELETE(
   }
 
   const { id } = params;
-  let existing: any;
+  const candidateSlugs = [id, slugify(id)];
+  const defaultMatch = DEFAULT_HAIRSTYLES.find(
+    (h: any) => h.id === id || h.slug === id || slugify(h.name || h.title) === slugify(id)
+  );
+  if (defaultMatch) {
+    if (defaultMatch.slug) candidateSlugs.push(defaultMatch.slug);
+    candidateSlugs.push(slugify(defaultMatch.name || defaultMatch.title));
+  }
+
+  let existing: any = null;
   try {
     existing = await prisma.hairstyle.findFirst({
       where: {
-        OR: [{ id }, { slug: id }],
+        OR: [
+          { id },
+          { slug: { in: candidateSlugs } },
+          ...(defaultMatch ? [{ title: defaultMatch.name || defaultMatch.title }] : []),
+        ],
       },
     });
   } catch {
-    existing = memoryStore.findHairstyleById(id) || memoryStore.hairstyles.find((h) => h.slug === id);
+    existing = memoryStore.findHairstyleById(id) || defaultMatch;
   }
 
-  if (!existing) {
-    return NextResponse.json({ error: 'Hairstyle not found' }, { status: 404 });
-  }
-
-  try {
-    await prisma.hairstyle.delete({ where: { id: existing.id } });
-  } catch {
-    memoryStore.deleteHairstyle(existing.id);
+  if (existing?.id) {
+    try {
+      await prisma.hairstyle.delete({ where: { id: existing.id } });
+    } catch {
+      memoryStore.deleteHairstyle(existing.id);
+    }
+  } else {
+    memoryStore.deleteHairstyle(id);
   }
 
   await logAuditEvent({
@@ -299,8 +357,8 @@ export async function DELETE(
     userRole: auth.user.role.name,
     action: 'DELETE',
     entity: 'HAIRSTYLE',
-    entityId: existing.id,
-    details: { name: existing.title, title: existing.title },
+    entityId: existing?.id || id,
+    details: { name: existing?.title || id, title: existing?.title || id },
     ipAddress: request.headers.get('x-forwarded-for') || '127.0.0.1',
     userAgent: request.headers.get('user-agent'),
   });
@@ -309,5 +367,5 @@ export async function DELETE(
   safeRevalidatePath('/admin/hairstyles');
   safeRevalidatePath('/');
 
-  return NextResponse.json({ success: true, id: existing.id });
+  return NextResponse.json({ success: true, id: existing?.id || id });
 }

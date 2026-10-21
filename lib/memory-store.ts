@@ -236,12 +236,39 @@ class MemoryStore {
   }
 
   findHairstyleById(id: string) {
-    return this.hairstyles.find((h) => h.id === id) || null;
+    if (!id) return null;
+    const clean = id.toLowerCase().trim();
+    return (
+      this.hairstyles.find(
+        (h) =>
+          h.id === id ||
+          (h.slug && h.slug.toLowerCase() === clean) ||
+          (h.title && h.title.toLowerCase() === clean) ||
+          (h.name && h.name.toLowerCase() === clean)
+      ) || null
+    );
   }
 
   updateHairstyle(id: string, data: any) {
-    const idx = this.hairstyles.findIndex((h) => h.id === id);
-    if (idx === -1) return null;
+    if (!id) return null;
+    const clean = id.toLowerCase().trim();
+    const idx = this.hairstyles.findIndex(
+      (h) =>
+        h.id === id ||
+        (h.slug && h.slug.toLowerCase() === clean) ||
+        (h.title && h.title.toLowerCase() === clean) ||
+        (h.name && h.name.toLowerCase() === clean)
+    );
+    if (idx === -1) {
+      const created = {
+        id: id || generateId('hs'),
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.hairstyles.push(created);
+      return created;
+    }
     this.hairstyles[idx] = { ...this.hairstyles[idx], ...data, updatedAt: new Date() };
     return this.hairstyles[idx];
   }
