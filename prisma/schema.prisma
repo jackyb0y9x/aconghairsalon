@@ -289,6 +289,7 @@ model Service {
   imageUrl        String?
   isPopular       Boolean       @default(false)
   isActive        Boolean       @default(true)
+  showOnHome      Boolean       @default(true)
   displayOrder    Int           @default(0)
 
   categoryId      String

@@ -66,7 +66,7 @@ export function PublicFooter({ settings }: PublicFooterProps) {
           <div className="space-y-4">
             <div className="flex items-center gap-3.5">
               {logoUrl ? (
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-salon-gold/50 bg-salon-charcoal shadow-gold-glow flex items-center justify-center shrink-0">
+                <div className="relative w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-salon-gold/50 bg-salon-charcoal shadow-gold-glow flex items-center justify-center shrink-0">
                   <img
                     src={logoUrl}
                     alt={brandName}
@@ -74,7 +74,7 @@ export function PublicFooter({ settings }: PublicFooterProps) {
                   />
                 </div>
               ) : (
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-salon-gold-dark via-salon-gold to-salon-gold-light flex items-center justify-center text-salon-noir font-serif font-black text-xl shadow-gold-glow tracking-tighter shrink-0">
+                <div className="w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr from-salon-gold-dark via-salon-gold to-salon-gold-light flex items-center justify-center text-salon-noir font-serif font-black text-base sm:text-xl shadow-gold-glow tracking-tighter shrink-0">
                   {brandInitials}
                 </div>
               )}

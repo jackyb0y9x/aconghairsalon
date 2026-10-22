@@ -418,6 +418,7 @@ const ServiceBaseSchema = z.object({
   category: z.string().optional(),
   isPopular: z.boolean().default(false),
   isActive: z.boolean().default(true),
+  showOnHome: z.boolean().default(true),
   displayOrder: z.coerce.number().int().min(0).default(0),
 });
 
@@ -472,6 +473,7 @@ export function serializeService(s: any) {
     imageUrl: s.imageUrl || null,
     isPopular: s.isPopular ?? false,
     isActive: s.isActive ?? true,
+    showOnHome: s.showOnHome ?? true,
     displayOrder: s.displayOrder ?? 0,
     createdAt: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),
     updatedAt: s.updatedAt ? new Date(s.updatedAt).toISOString() : new Date().toISOString(),

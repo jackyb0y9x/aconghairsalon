@@ -4,6 +4,7 @@ import { getPublicHomeData } from '@/lib/public-data';
 import { HeroBannerSlider } from '@/components/public/home/HeroBannerSlider';
 import { QuickCategories } from '@/components/public/home/QuickCategories';
 import { TrendingHairstyles } from '@/components/public/home/TrendingHairstyles';
+import { FeaturedServicesPricing } from '@/components/public/home/FeaturedServicesPricing';
 import { LatestArticles } from '@/components/public/home/LatestArticles';
 import { DualCtaSection } from '@/components/public/home/DualCtaSection';
 
@@ -39,7 +40,10 @@ export default async function HomePage() {
       {/* 3. Trending Hairstyles Carousel */}
       <TrendingHairstyles hairstyles={data.trendingHairstyles} />
 
-      {/* 4. Latest Hair Care & Style Articles */}
+      {/* 4. Featured Services & Pricing List */}
+      <FeaturedServicesPricing services={data.services} />
+
+      {/* 5. Latest Hair Care & Style Articles */}
       <LatestArticles articles={data.articles} />
 
       {/* 6. Action Conversion CTAs */}

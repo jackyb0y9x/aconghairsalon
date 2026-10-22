@@ -1501,6 +1501,7 @@ export const DEFAULT_SERVICES = [
     postCareAdvice: 'Nên duy trì cắt tỉa phom sau mỗi 3-4 tuần để giữ nếp chuẩn.',
     isPopular: true,
     isActive: true,
+    showOnHome: true,
     displayOrder: 1,
   },
   {
@@ -1520,6 +1521,7 @@ export const DEFAULT_SERVICES = [
     postCareAdvice: 'Giữ tóc khô ráo trong 48h đầu sau khi làm hóa chất. Sử dụng bộ dầu gội dưỡng màu Olaplex.',
     isPopular: true,
     isActive: true,
+    showOnHome: true,
     displayOrder: 2,
   },
   {
@@ -1539,6 +1541,7 @@ export const DEFAULT_SERVICES = [
     postCareAdvice: 'Bắt buộc sử dụng dầu gội tím khử ánh đồng và ủ tóc 1-2 lần/tuần.',
     isPopular: true,
     isActive: true,
+    showOnHome: true,
     displayOrder: 3,
   },
   {
@@ -1558,9 +1561,24 @@ export const DEFAULT_SERVICES = [
     postCareAdvice: 'Sử dụng dầu gội cân bằng pH 5.5, không sấy tóc ở nhiệt độ quá cao.',
     isPopular: false,
     isActive: true,
+    showOnHome: true,
     displayOrder: 4,
   },
 ];
+
+// Auto-seed memoryStore with services if empty
+try {
+  if (typeof memoryStore !== 'undefined' && memoryStore.services && memoryStore.services.length === 0) {
+    memoryStore.services = DEFAULT_SERVICES.map((s: any) => ({
+      ...s,
+      showOnHome: s.showOnHome ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+  }
+} catch {
+  // ignore
+}
 
 export const DEFAULT_COMBOS = [
   {
@@ -1827,15 +1845,14 @@ export async function getPublicHomeData() {
 
   const servicesPromise = prisma.service
     .findMany({
-      where: { isActive: true },
+      where: { isActive: true, showOnHome: true },
       include: { category: true },
-      take: 6,
       orderBy: { displayOrder: 'asc' },
     })
-    .then((items) => (items.length > 0 ? items.map(serializeService) : DEFAULT_SERVICES.map(serializeService)))
+    .then((items) => (items.length > 0 ? items.map(serializeService) : DEFAULT_SERVICES.filter((s: any) => s.showOnHome !== false).map(serializeService)))
     .catch(() => {
-      const fromStore = memoryStore.findServices();
-      return fromStore.length > 0 ? fromStore.map(serializeService) : DEFAULT_SERVICES.map(serializeService);
+      const fromStore = memoryStore.findServices().filter((s: any) => s.isActive !== false && s.showOnHome !== false);
+      return fromStore.length > 0 ? fromStore.map(serializeService) : DEFAULT_SERVICES.filter((s: any) => s.showOnHome !== false).map(serializeService);
     });
 
   const articlesPromise = prisma.article

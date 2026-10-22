@@ -106,6 +106,7 @@ export async function PUT(
   if (input.imageUrl !== undefined) updateData.imageUrl = input.imageUrl;
   if (input.isPopular !== undefined) updateData.isPopular = input.isPopular;
   if (input.isActive !== undefined) updateData.isActive = input.isActive;
+  if (input.showOnHome !== undefined) updateData.showOnHome = input.showOnHome;
   if (input.displayOrder !== undefined) updateData.displayOrder = input.displayOrder;
   if (input.categoryId !== undefined) updateData.categoryId = input.categoryId;
 

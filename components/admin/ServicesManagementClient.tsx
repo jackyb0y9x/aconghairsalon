@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { ServiceModal, ServiceData } from './ServiceModal';
 import { formatVND, formatPriceRange, formatDuration } from '@/lib/utils';
@@ -28,7 +30,28 @@ export function ServicesManagementClient({ initialServices, categories }: Props)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<ServiceData | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [togglingHomeId, setTogglingHomeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleToggleShowOnHome = async (s: any) => {
+    const nextVal = s.showOnHome === false ? true : false;
+    setTogglingHomeId(s.id);
+    setServices((prev) =>
+      prev.map((item) => (item.id === s.id ? { ...item, showOnHome: nextVal } : item))
+    );
+    try {
+      await fetch(`/api/admin/services/${s.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showOnHome: nextVal }),
+      });
+    } catch (err) {
+      console.error('Failed to toggle showOnHome:', err);
+      fetchServices();
+    } finally {
+      setTogglingHomeId(null);
+    }
+  };
 
   const fetchServices = async () => {
     setLoading(true);
@@ -148,6 +171,7 @@ export function ServicesManagementClient({ initialServices, categories }: Props)
                 <th className="py-3.5 px-4">Chuyên mục</th>
                 <th className="py-3.5 px-4 text-center">Thời lượng</th>
                 <th className="py-3.5 px-4 text-right">Khung giá (VNĐ)</th>
+                <th className="py-3.5 px-4 text-center">Hiện trang chủ</th>
                 <th className="py-3.5 px-4 text-center">Nổi bật</th>
                 <th className="py-3.5 px-4 text-center">Trạng thái</th>
                 <th className="py-3.5 px-4 text-right">Thao tác</th>
@@ -156,7 +180,7 @@ export function ServicesManagementClient({ initialServices, categories }: Props)
             <tbody className="divide-y divide-salon-gold/10">
               {filteredServices.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-zinc-400">
+                  <td colSpan={8} className="py-8 text-center text-zinc-400">
                     Chưa có dịch vụ nào phù hợp.
                   </td>
                 </tr>
@@ -187,6 +211,31 @@ export function ServicesManagementClient({ initialServices, categories }: Props)
                       </td>
                       <td className="py-3 px-4 text-right font-mono text-salon-gold font-bold">
                         {priceStr}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleShowOnHome(s)}
+                          disabled={togglingHomeId === s.id}
+                          title={s.showOnHome !== false ? 'Đang hiển thị giá ngoài trang chủ (Bấm để ẩn)' : 'Đang ẩn khỏi trang chủ (Bấm để hiển thị)'}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all border ${
+                            s.showOnHome !== false
+                              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25'
+                              : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300 hover:bg-zinc-700/60'
+                          }`}
+                        >
+                          {s.showOnHome !== false ? (
+                            <>
+                              <Eye className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Hiện giá</span>
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="w-3.5 h-3.5 text-zinc-500" />
+                              <span>Ẩn</span>
+                            </>
+                          )}
+                        </button>
                       </td>
                       <td className="py-3 px-4 text-center">
                         {s.isPopular ? (

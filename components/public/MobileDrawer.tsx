@@ -90,9 +90,9 @@ export function MobileDrawer({
       <div className="relative z-10 w-full max-w-sm bg-salon-charcoal border-l border-salon-gold/20 h-full flex flex-col shadow-2xl p-6 overflow-y-auto">
         {/* Drawer Header */}
         <div className="flex items-center justify-between pb-5 border-b border-salon-gold/15">
-          <Link href="/" onClick={onClose} className="flex items-center gap-3">
+          <Link href="/" onClick={onClose} className="flex items-center gap-2.5">
             {logoUrl ? (
-              <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-salon-gold/50 bg-salon-charcoal shadow-gold-glow flex items-center justify-center shrink-0">
+              <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-salon-gold/50 bg-salon-charcoal shadow-gold-glow flex items-center justify-center shrink-0">
                 <img
                   src={logoUrl}
                   alt={brandName}
@@ -100,15 +100,15 @@ export function MobileDrawer({
                 />
               </div>
             ) : (
-              <span className="w-12 h-12 rounded-full bg-gradient-to-br from-salon-gold-light to-salon-gold flex items-center justify-center text-salon-noir font-serif font-bold text-base shadow-gold-glow tracking-tighter shrink-0">
+              <span className="w-10 h-10 rounded-full bg-gradient-to-br from-salon-gold-light to-salon-gold flex items-center justify-center text-salon-noir font-serif font-bold text-sm shadow-gold-glow tracking-tighter shrink-0">
                 {brandInitials}
               </span>
             )}
             <div className="flex flex-col">
-              <span className="font-serif font-bold text-lg gold-text-gradient tracking-wide leading-tight">
+              <span className="font-serif font-bold text-base gold-text-gradient tracking-wide leading-tight">
                 {brandName}
               </span>
-              <span className="text-[10px] tracking-widest uppercase text-neutral-400">
+              <span className="text-[9px] tracking-widest uppercase text-neutral-400">
                 Hair Salon Nam & Nữ
               </span>
             </div>

@@ -146,6 +146,7 @@ export async function POST(request: NextRequest) {
     imageUrl: input.imageUrl || null,
     isPopular: input.isPopular ?? false,
     isActive: input.isActive ?? true,
+    showOnHome: input.showOnHome ?? true,
     displayOrder: input.displayOrder ?? 0,
     categoryId,
   };

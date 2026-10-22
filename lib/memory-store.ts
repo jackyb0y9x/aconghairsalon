@@ -368,12 +368,22 @@ class MemoryStore {
   }
 
   findServiceById(id: string) {
-    return this.services.find((s) => s.id === id) || null;
+    if (!id) return null;
+    return this.services.find((s) => s.id === id || s.slug === id) || null;
   }
 
   updateService(id: string, data: any) {
-    const idx = this.services.findIndex((s) => s.id === id);
-    if (idx === -1) return null;
+    let idx = this.services.findIndex((s) => s.id === id || s.slug === id);
+    if (idx === -1) {
+      const created = {
+        id: id || generateId('srv'),
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.services.push(created);
+      return created;
+    }
     this.services[idx] = { ...this.services[idx], ...data, updatedAt: new Date() };
     return this.services[idx];
   }

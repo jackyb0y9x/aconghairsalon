@@ -24,6 +24,7 @@ export interface ServiceData {
   category?: string;
   isPopular?: boolean;
   isActive?: boolean;
+  showOnHome?: boolean;
   displayOrder?: number;
 }
 
@@ -50,6 +51,7 @@ export function ServiceModal({ isOpen, onClose, service, categories, onSaved }: 
     categoryId: '',
     isPopular: false,
     isActive: true,
+    showOnHome: true,
     displayOrder: 0,
   });
 
@@ -72,6 +74,7 @@ export function ServiceModal({ isOpen, onClose, service, categories, onSaved }: 
         categoryId: service.categoryId || categories[0]?.id || '',
         isPopular: service.isPopular ?? false,
         isActive: service.isActive ?? true,
+        showOnHome: service.showOnHome ?? true,
         displayOrder: service.displayOrder ?? 0,
       });
     } else {
@@ -89,6 +92,7 @@ export function ServiceModal({ isOpen, onClose, service, categories, onSaved }: 
         categoryId: categories[0]?.id || '',
         isPopular: false,
         isActive: true,
+        showOnHome: true,
         displayOrder: 0,
       });
     }
@@ -136,6 +140,7 @@ export function ServiceModal({ isOpen, onClose, service, categories, onSaved }: 
         categoryId: formData.categoryId || undefined,
         isPopular: formData.isPopular ?? false,
         isActive: formData.isActive ?? true,
+        showOnHome: formData.showOnHome ?? true,
         displayOrder: Number(formData.displayOrder) || 0,
       };
 
@@ -341,17 +346,31 @@ export function ServiceModal({ isOpen, onClose, service, categories, onSaved }: 
             helperText="Tải lên ảnh mô tả dịch vụ (khuyến nghị tỷ lệ 16:9, tối đa 5MB)"
           />
 
-          <div className="flex items-center gap-6 pt-2">
+          <div className="flex flex-wrap items-center gap-6 pt-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showOnHomeService"
+                checked={formData.showOnHome ?? true}
+                onChange={(e) => setFormData({ ...formData, showOnHome: e.target.checked })}
+                className="w-4 h-4 rounded border-salon-gold/30 bg-salon-noir text-salon-gold focus:ring-salon-gold cursor-pointer"
+              />
+              <label htmlFor="showOnHomeService" className="text-sm text-salon-gold-light cursor-pointer font-semibold flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-salon-gold" />
+                <span>Hiển thị bảng giá ngoài trang chủ</span>
+              </label>
+            </div>
+
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="isPopularService"
                 checked={formData.isPopular ?? false}
                 onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
-                className="w-4 h-4 rounded border-salon-gold/30 bg-salon-noir text-salon-gold focus:ring-salon-gold"
+                className="w-4 h-4 rounded border-salon-gold/30 bg-salon-noir text-salon-gold focus:ring-salon-gold cursor-pointer"
               />
               <label htmlFor="isPopularService" className="text-sm text-salon-ivory cursor-pointer font-medium">
-                Dịch vụ được yêu thích (Popular)
+                Dịch vụ nổi bật (Hot)
               </label>
             </div>
 
@@ -361,10 +380,10 @@ export function ServiceModal({ isOpen, onClose, service, categories, onSaved }: 
                 id="isActiveService"
                 checked={formData.isActive ?? true}
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4 rounded border-salon-gold/30 bg-salon-noir text-salon-gold focus:ring-salon-gold"
+                className="w-4 h-4 rounded border-salon-gold/30 bg-salon-noir text-salon-gold focus:ring-salon-gold cursor-pointer"
               />
               <label htmlFor="isActiveService" className="text-sm text-salon-ivory cursor-pointer font-medium">
-                Mở đặt lịch
+                Mở hoạt động
               </label>
             </div>
           </div>

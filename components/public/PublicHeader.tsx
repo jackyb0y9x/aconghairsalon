@@ -94,13 +94,13 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo & Brand Identity */}
-          <Link href="/" className="flex items-center gap-3 sm:gap-3.5 group">
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3.5 group">
             {logoUrl ? (
               <div
                 className={`relative rounded-full overflow-hidden border-2 border-salon-gold/50 bg-salon-charcoal shadow-gold-glow group-hover:scale-105 transition-all duration-300 flex items-center justify-center shrink-0 ${
                   isScrolled
-                    ? 'w-12 h-12 sm:w-13 sm:h-13 md:w-14 md:h-14'
-                    : 'w-13 h-13 sm:w-15 sm:h-15 md:w-16 md:h-16 lg:w-[68px] lg:h-[68px]'
+                    ? 'w-9 h-9 sm:w-11 sm:h-11 md:w-13 md:h-13'
+                    : 'w-10 h-10 sm:w-13 sm:h-13 md:w-15 md:h-15 lg:w-[68px] lg:h-[68px]'
                 }`}
               >
                 <img
@@ -113,8 +113,8 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
               <div
                 className={`rounded-full bg-gradient-to-tr from-salon-gold-dark via-salon-gold to-salon-gold-light flex items-center justify-center text-salon-noir font-serif font-black shadow-gold-glow group-hover:scale-105 transition-all duration-300 tracking-tighter shrink-0 ${
                   isScrolled
-                    ? 'w-12 h-12 sm:w-13 sm:h-13 md:w-14 md:h-14 text-lg'
-                    : 'w-13 h-13 sm:w-15 sm:h-15 md:w-16 md:h-16 lg:w-[68px] lg:h-[68px] text-xl sm:text-2xl'
+                    ? 'w-9 h-9 sm:w-11 sm:h-11 md:w-13 md:h-13 text-sm'
+                    : 'w-10 h-10 sm:w-13 sm:h-13 md:w-15 md:h-15 lg:w-[68px] lg:h-[68px] text-base sm:text-xl lg:text-2xl'
                 }`}
               >
                 {brandInitials}
@@ -124,13 +124,13 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
               <span
                 className={`font-serif font-bold gold-text-gradient tracking-wide leading-tight transition-all duration-300 ${
                   isScrolled
-                    ? 'text-lg sm:text-xl md:text-2xl'
-                    : 'text-xl sm:text-2xl md:text-[25px]'
+                    ? 'text-base sm:text-xl md:text-2xl'
+                    : 'text-lg sm:text-2xl md:text-[25px]'
                 }`}
               >
                 {brandName}
               </span>
-              <span className="text-[10px] sm:text-xs tracking-widest uppercase text-neutral-400 font-light mt-0.5">
+              <span className="text-[9px] sm:text-xs tracking-widest uppercase text-neutral-400 font-light mt-0.5">
                 Hair Salon Nam & Nữ Hiện Đại
               </span>
             </div>
