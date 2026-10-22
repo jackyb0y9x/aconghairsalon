@@ -61,21 +61,21 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
   return (
     <>
       {/* Top Announcement & Quick Contact Bar (desktop) */}
-      <div className="hidden lg:block bg-salon-noir/90 border-b border-salon-gold/15 text-xs text-neutral-300 py-1.5 px-6">
+      <div className="hidden lg:block bg-salon-noir/90 border-b border-salon-gold/15 text-xs text-salon-ivory/80 dark:text-neutral-300 py-1.5 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Đang mở cửa: {openingHours}</span>
             </span>
-            <span className="text-neutral-500">|</span>
+            <span className="text-neutral-400 dark:text-neutral-500">|</span>
             <span className="truncate max-w-md">{address}</span>
           </div>
 
           <div className="flex items-center gap-6">
             <a
               href={`tel:${hotline}`}
-              className="flex items-center gap-1.5 text-salon-gold-light hover:text-salon-gold font-medium transition"
+              className="flex items-center gap-1.5 text-salon-gold hover:text-salon-gold-hover font-medium transition"
             >
               <Phone className="w-3.5 h-3.5 text-salon-gold" />
               <span>Hotline đặt hẹn: {hotline}</span>
@@ -130,7 +130,7 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
               >
                 {brandName}
               </span>
-              <span className="text-[9px] sm:text-xs tracking-widest uppercase text-neutral-400 font-light mt-0.5">
+              <span className="text-[9px] sm:text-xs tracking-widest uppercase text-salon-ivory/60 dark:text-neutral-400 font-light mt-0.5">
                 Hair Salon Nam & Nữ Hiện Đại
               </span>
             </div>
@@ -147,7 +147,7 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
                   className={`text-sm tracking-wide transition-all relative py-1 ${
                     isActive
                       ? 'text-salon-gold font-semibold'
-                      : 'text-neutral-300 hover:text-salon-gold-light'
+                      : 'text-salon-ivory/80 dark:text-neutral-300 hover:text-salon-gold'
                   }`}
                 >
                   {item.label}

@@ -9,16 +9,14 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ className = '', variant = 'header' }: ThemeToggleProps) {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    // 1. Kiểm tra theme hiện tại từ documentElement hoặc localStorage
-    const isDark =
-      document.documentElement.classList.contains('dark') ||
-      localStorage.getItem('salon_theme') === 'dark' ||
-      (!('salon_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    // Mặc định là chế độ sáng ('light') trừ khi người dùng đã chủ động chọn 'dark'
+    const storedTheme = localStorage.getItem('salon_theme');
+    const isDark = storedTheme === 'dark';
 
     if (isDark) {
       document.documentElement.classList.add('dark');

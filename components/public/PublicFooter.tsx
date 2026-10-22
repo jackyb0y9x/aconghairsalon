@@ -58,7 +58,7 @@ export function PublicFooter({ settings }: PublicFooterProps) {
     : 'CN';
 
   return (
-    <footer className="bg-salon-noir border-t border-salon-gold/20 text-neutral-300 pt-16 pb-8">
+    <footer className="bg-salon-noir border-t border-salon-gold/20 text-salon-ivory/80 dark:text-neutral-300 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main 4-Column Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 pb-12 border-b border-salon-gold/15">
@@ -82,7 +82,7 @@ export function PublicFooter({ settings }: PublicFooterProps) {
                 <h3 className="font-serif font-bold text-xl sm:text-2xl gold-text-gradient tracking-wide">
                   {brandName}
                 </h3>
-                <p className="text-[11px] tracking-widest uppercase text-neutral-400 mt-0.5">
+                <p className="text-[11px] tracking-widest uppercase text-salon-ivory/60 dark:text-neutral-400 mt-0.5">
                   Hair Salon Nam & Nữ Hiện Đại
                 </p>
               </div>
@@ -92,7 +92,7 @@ export function PublicFooter({ settings }: PublicFooterProps) {
               &ldquo;{slogan}&rdquo;
             </p>
 
-            <p className="text-xs text-neutral-400 leading-relaxed font-light">
+            <p className="text-xs text-salon-ivory/70 dark:text-neutral-400 leading-relaxed font-light">
               Không gian nghệ thuật tạo mẫu tóc cao cấp kết hợp kỹ thuật cắt hình khối điêu luyện và công nghệ mô phỏng kiểu tóc trực quan AI.
             </p>
 
@@ -142,7 +142,7 @@ export function PublicFooter({ settings }: PublicFooterProps) {
             <h4 className="text-sm font-semibold uppercase tracking-wider text-salon-gold-light border-b border-salon-gold/20 pb-2">
               Dịch Vụ Trọng Tâm
             </h4>
-            <ul className="space-y-2 text-sm font-light text-neutral-400">
+            <ul className="space-y-2 text-sm font-light text-salon-ivory/70 dark:text-neutral-400">
               <li>• Cắt tạo kiểu chuyên nghiệp (Layer, Wolf Cut, Side Part)</li>
               <li>• Uốn sóng lơi Hàn Quốc & Nhật Bản</li>
               <li>• Nhuộm Balayage & Tẩy liên kết Olaplex</li>
@@ -157,7 +157,7 @@ export function PublicFooter({ settings }: PublicFooterProps) {
             <h4 className="text-sm font-semibold uppercase tracking-wider text-salon-gold-light border-b border-salon-gold/20 pb-2">
               Liên Hệ & Đặt Lịch
             </h4>
-            <div className="space-y-2.5 text-xs text-neutral-300">
+            <div className="space-y-2.5 text-xs text-salon-ivory/80 dark:text-neutral-300">
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-salon-gold mt-0.5 flex-shrink-0" />
                 <span className="leading-relaxed">{address}</span>

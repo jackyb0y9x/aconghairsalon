@@ -108,7 +108,7 @@ export function MobileDrawer({
               <span className="font-serif font-bold text-base gold-text-gradient tracking-wide leading-tight">
                 {brandName}
               </span>
-              <span className="text-[9px] tracking-widest uppercase text-neutral-400">
+              <span className="text-[9px] tracking-widest uppercase text-salon-ivory/60 dark:text-neutral-400">
                 Hair Salon Nam & Nữ
               </span>
             </div>
@@ -117,7 +117,7 @@ export function MobileDrawer({
             <ThemeToggle />
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition"
+              className="p-2 rounded-lg text-salon-ivory/70 hover:text-salon-gold dark:text-neutral-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition"
               aria-label="Đóng menu"
             >
               <X className="w-6 h-6" />
@@ -136,14 +136,14 @@ export function MobileDrawer({
                 href={item.href}
                 className={`flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium transition ${
                   isActive
-                    ? 'bg-salon-gold/15 text-salon-gold-light font-semibold border border-salon-gold/30'
-                    : 'text-neutral-300 hover:text-white hover:bg-white/5'
+                    ? 'bg-salon-gold/15 text-salon-gold font-semibold border border-salon-gold/30'
+                    : 'text-salon-ivory/80 hover:text-salon-gold dark:text-neutral-300 dark:hover:text-white hover:bg-salon-gold/5 dark:hover:bg-white/5'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon
                     className={`w-5 h-5 ${
-                      item.highlight ? 'text-salon-gold' : isActive ? 'text-salon-gold' : 'text-neutral-400'
+                      item.highlight ? 'text-salon-gold' : isActive ? 'text-salon-gold' : 'text-salon-ivory/60 dark:text-neutral-400'
                     }`}
                   />
                   <span>{item.label}</span>
