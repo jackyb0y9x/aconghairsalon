@@ -26,6 +26,9 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
 
+  const handleOpenMobile = React.useCallback(() => setIsMobileOpen(true), []);
+  const handleCloseMobile = React.useCallback(() => setIsMobileOpen(false), []);
+
   const brandName = settings?.brandName || 'Công Nguyễn Hair Salon';
   const logoUrl = settings?.logoUrl;
   const hotline = settings?.hotline || settings?.hotlinePrimary || '0988 888 888';
@@ -182,8 +185,9 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
 
             {/* Mobile Hamburger Button */}
             <button
-              onClick={() => setIsMobileOpen(true)}
-              className="p-2 sm:p-2.5 rounded-xl lg:hidden text-neutral-300 hover:text-salon-gold hover:bg-white/5 transition"
+              type="button"
+              onClick={handleOpenMobile}
+              className="p-2 sm:p-2.5 rounded-xl lg:hidden text-neutral-300 hover:text-salon-gold hover:bg-white/5 transition cursor-pointer"
               aria-label="Mở menu điều hướng"
             >
               <Menu className="w-6 h-6" />
@@ -195,7 +199,7 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
       {/* Mobile Drawer */}
       <MobileDrawer
         isOpen={isMobileOpen}
-        onClose={() => setIsMobileOpen(false)}
+        onClose={handleCloseMobile}
         brandName={brandName}
         logoUrl={logoUrl}
         hotline={hotline}

@@ -39,6 +39,7 @@ export function MobileDrawer({
   openingHours = '08:30 - 20:30 Hàng ngày',
 }: MobileDrawerProps) {
   const pathname = usePathname();
+  const lastPathnameRef = React.useRef(pathname);
 
   const brandInitials = brandName
     ? brandName
@@ -50,14 +51,18 @@ export function MobileDrawer({
         .toUpperCase()
     : 'CN';
 
-  // Close drawer when pathname changes
+  // Close drawer only when pathname actually changes (navigation occurred)
   useEffect(() => {
-    onClose();
+    if (lastPathnameRef.current !== pathname) {
+      lastPathnameRef.current = pathname;
+      onClose();
+    }
   }, [pathname, onClose]);
 
   // Lock body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
+      lastPathnameRef.current = pathname;
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -65,7 +70,7 @@ export function MobileDrawer({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [isOpen, pathname]);
 
   if (!isOpen) return null;
 
@@ -79,7 +84,7 @@ export function MobileDrawer({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+    <div className="fixed inset-0 z-[100] lg:hidden flex justify-end">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
@@ -88,7 +93,7 @@ export function MobileDrawer({
       />
 
       {/* Slide-over panel */}
-      <div className="relative z-10 w-full max-w-sm bg-salon-charcoal border-l border-salon-gold/20 h-full flex flex-col shadow-2xl p-6 overflow-y-auto">
+      <div className="relative z-10 w-full max-w-sm bg-salon-charcoal border-l border-salon-gold/20 h-full flex flex-col shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
         {/* Drawer Header */}
         <div className="flex items-center justify-between pb-5 border-b border-salon-gold/15">
           <Link href="/" onClick={onClose} className="flex items-center gap-2.5">
@@ -135,6 +140,7 @@ export function MobileDrawer({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onClose}
                 className={`flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium transition ${
                   isActive
                     ? 'bg-salon-gold/15 text-salon-gold font-semibold border border-salon-gold/30'

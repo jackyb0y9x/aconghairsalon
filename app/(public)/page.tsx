@@ -7,6 +7,7 @@ import { TrendingHairstyles } from '@/components/public/home/TrendingHairstyles'
 import { FeaturedServicesPricing } from '@/components/public/home/FeaturedServicesPricing';
 import { LatestArticles } from '@/components/public/home/LatestArticles';
 import { DualCtaSection } from '@/components/public/home/DualCtaSection';
+import { HomeLocationMap } from '@/components/public/home/HomeLocationMap';
 
 export const revalidate = 60; // ISR cache 60s
 
@@ -48,6 +49,9 @@ export default async function HomePage() {
 
       {/* 6. Action Conversion CTAs */}
       <DualCtaSection />
+
+      {/* 7. Salon Location & Google Maps Section */}
+      <HomeLocationMap settings={data.settings} />
     </div>
   );
 }

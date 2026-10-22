@@ -196,7 +196,18 @@ export function PublicFooter({ settings }: PublicFooterProps) {
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex flex-col gap-2">
+              <a
+                href="https://www.google.com/maps/dir/?api=1&destination=20.785293,106.610434"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-full border border-salon-gold/30 bg-salon-gold/10 hover:bg-salon-gold/20 text-salon-gold font-medium text-xs transition"
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                <span>Chỉ Đường Google Maps</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+
               <Link
                 href="/booking"
                 className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-salon-gold text-salon-noir font-bold text-xs hover:bg-salon-gold-hover transition shadow-gold-subtle"
