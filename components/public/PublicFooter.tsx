@@ -130,6 +130,11 @@ export function PublicFooter({ settings }: PublicFooterProps) {
                 </Link>
               </li>
               <li>
+                <Link href="/location" className="hover:text-salon-gold transition flex items-center gap-1.5">
+                  <span>Địa chỉ & Bản đồ Google Maps</span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/blog" className="hover:text-salon-gold transition flex items-center gap-1.5">
                   <span>Tạp chí & Cẩm nang chăm sóc</span>
                 </Link>
@@ -160,7 +165,13 @@ export function PublicFooter({ settings }: PublicFooterProps) {
             <div className="space-y-2.5 text-xs text-salon-ivory/80 dark:text-neutral-300">
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-salon-gold mt-0.5 flex-shrink-0" />
-                <span className="leading-relaxed">{address}</span>
+                <Link
+                  href="/location"
+                  className="leading-relaxed hover:text-salon-gold transition-colors"
+                  title="Xem bản đồ chỉ đường"
+                >
+                  {address}
+                </Link>
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-salon-gold flex-shrink-0" />

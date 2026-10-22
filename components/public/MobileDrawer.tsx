@@ -74,6 +74,7 @@ export function MobileDrawer({
     { href: '/hairstyles', label: 'Thư Viện Kiểu Tóc', icon: Scissors },
     { href: '/colors', label: 'Bảng Màu & Tư Vấn', icon: Palette },
     { href: '/services', label: 'Dịch Vụ & Giá', icon: Layers },
+    { href: '/location', label: 'Địa Chỉ & Bản Đồ', icon: MapPin },
     { href: '/blog', label: 'Tạp Chí Làm Đẹp', icon: BookOpen },
   ];
 

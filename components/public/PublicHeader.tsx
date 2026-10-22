@@ -55,6 +55,7 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
     { href: '/hairstyles', label: 'Kiểu Tóc' },
     { href: '/colors', label: 'Bảng Màu' },
     { href: '/services', label: 'Dịch Vụ & Giá' },
+    { href: '/location', label: 'Địa Chỉ' },
     { href: '/blog', label: 'Tạp Chí' },
   ];
 
@@ -69,7 +70,13 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
               <span>Đang mở cửa: {openingHours}</span>
             </span>
             <span className="text-neutral-400 dark:text-neutral-500">|</span>
-            <span className="truncate max-w-md">{address}</span>
+            <Link
+              href="/location"
+              className="truncate max-w-md hover:text-salon-gold transition-colors flex items-center gap-1"
+              title="Xem bản đồ và chỉ đường tới salon"
+            >
+              <span>{address}</span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-6">
@@ -137,7 +144,7 @@ export function PublicHeader({ settings }: PublicHeaderProps) {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-8">
             {navLinks.map((item) => {
               const isActive = pathname === item.href;
               return (
