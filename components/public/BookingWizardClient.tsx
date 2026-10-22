@@ -1,25 +1,23 @@
 'use client';
 
-import React, { useState, useEffect, useId, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
   CheckCircle2,
   Calendar,
   Clock,
-  User,
   Scissors,
-  Palette,
   Sparkles,
   ChevronRight,
   ChevronLeft,
   AlertCircle,
-  ShieldCheck,
   Check,
+  ShieldCheck,
+  Phone,
   Layers,
 } from 'lucide-react';
-import { formatVND, formatDuration } from '@/lib/utils';
-import { CreateBookingSchema, VIETNAMESE_PHONE_REGEX } from '@/lib/validations/booking';
+import { CreateBookingSchema } from '@/lib/validations/booking';
 
 export interface ServiceOption {
   id: string;
@@ -69,33 +67,43 @@ export interface ColorOption {
 }
 
 interface BookingWizardClientProps {
-  services: ServiceOption[];
-  combos: ComboOption[];
-  stylists: StylistOption[];
-  hairstyles: HairstyleOption[];
-  colors: ColorOption[];
+  services?: ServiceOption[];
+  combos?: ComboOption[];
+  stylists?: StylistOption[];
+  hairstyles?: HairstyleOption[];
+  colors?: ColorOption[];
 }
 
 export function BookingWizardClient({
-  services,
-  combos,
-  stylists,
-  hairstyles,
-  colors,
+  services = [],
+  combos = [],
+  stylists = [],
+  hairstyles = [],
+  colors = [],
 }: BookingWizardClientProps) {
   const searchParams = useSearchParams();
 
-  // Wizard state (Step 1 to 5)
+  // Wizard state (Step 1 to 4)
+  // 1: Dịch vụ (Cắt thông thường hoặc Nhuộm/Tẩy/Uốn)
+  // 2: Mẫu tóc (Không bắt buộc, có thể Next qua)
+  // 3: Ngày & Giờ
+  // 4: Thông tin khách hàng & Xác nhận
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form inputs
-  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
-  const [selectedComboId, setSelectedComboId] = useState<string>('');
+  // Service Type: 'cat-toc' (Cắt tóc thông thường) | 'uon-nhuom-tay' (Có sử dụng nhuộm/tẩy/uốn)
+  const [serviceType, setServiceType] = useState<'cat-toc' | 'uon-nhuom-tay'>('cat-toc');
+  const [chemicalOptions, setChemicalOptions] = useState<string[]>([]);
+
+  // Optional Hairstyle & Color
   const [selectedHairstyleId, setSelectedHairstyleId] = useState<string>('');
   const [selectedHairColorId, setSelectedHairColorId] = useState<string>('');
-  const [selectedStylistId, setSelectedStylistId] = useState<string>(''); // empty string means "Any Stylist"
+
+  // Date & Time
   const [bookingDate, setBookingDate] = useState<string>('');
   const [bookingTime, setBookingTime] = useState<string>('');
+
+  // Customer Info
   const [customerName, setCustomerName] = useState<string>('');
   const [customerPhone, setCustomerPhone] = useState<string>('');
   const [customerEmail, setCustomerEmail] = useState<string>('');
@@ -111,7 +119,6 @@ export function BookingWizardClient({
 
   // Initialize idempotencyKey and pre-populate from URL
   useEffect(() => {
-    // Generate UUID for idempotency lock
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
       setIdempotencyKey(crypto.randomUUID());
     } else {
@@ -119,17 +126,24 @@ export function BookingWizardClient({
     }
 
     // Pre-populate from URL
-    const sId = searchParams.get('serviceId');
-    const cId = searchParams.get('comboId');
-    const hId = searchParams.get('hairstyleId') || searchParams.get('styleId');
-    const colId = searchParams.get('hairColorId') || searchParams.get('colorId');
-    const styId = searchParams.get('stylistId');
+    const sId = searchParams.get('serviceId') || '';
+    const hId = searchParams.get('hairstyleId') || searchParams.get('styleId') || '';
+    const colId = searchParams.get('hairColorId') || searchParams.get('colorId') || '';
 
-    if (sId) setSelectedServiceId(sId);
-    if (cId) setSelectedComboId(cId);
+    if (
+      sId.includes('uon') ||
+      sId.includes('nhuom') ||
+      sId.includes('tay') ||
+      sId.includes('color') ||
+      sId.includes('wave')
+    ) {
+      setServiceType('uon-nhuom-tay');
+    } else {
+      setServiceType('cat-toc');
+    }
+
     if (hId) setSelectedHairstyleId(hId);
     if (colId) setSelectedHairColorId(colId);
-    if (styId) setSelectedStylistId(styId);
 
     // Default booking date to tomorrow
     const tomorrow = new Date();
@@ -167,25 +181,40 @@ export function BookingWizardClient({
     return list;
   }, []);
 
-  // Selected Service/Combo details
-  const activeService = services.find((s) => s.id === selectedServiceId);
-  const activeCombo = combos.find((c) => c.id === selectedComboId || c.id === selectedServiceId);
-  const activeStylist = stylists.find((s) => s.id === selectedStylistId);
+  // Selected Hairstyle / Color details
   const activeHairstyle = hairstyles.find((h) => h.id === selectedHairstyleId);
   const activeColor = colors.find((c) => c.id === selectedHairColorId);
 
-  // Step 1 -> 2 barrier validation
-  const handleNextFromStep1 = () => {
-    if (!selectedServiceId && !selectedComboId) {
-      setFieldErrors({ service: 'Vui lòng chọn một dịch vụ hoặc combo để tiếp tục' });
-      return;
+  // Toggle chemical sub-options
+  const toggleChemicalOption = (opt: string) => {
+    setChemicalOptions((prev) =>
+      prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
+    );
+  };
+
+  // Service display label
+  const getServiceLabel = () => {
+    if (serviceType === 'cat-toc') {
+      return 'Dịch vụ cắt tóc thông thường (Cắt gội & tạo kiểu cơ bản)';
     }
+    if (chemicalOptions.length > 0) {
+      return `Có sử dụng Nhuộm / Tẩy / Uốn (${chemicalOptions.join(', ')})`;
+    }
+    return 'Có sử dụng dịch vụ Nhuộm / Tẩy / Uốn';
+  };
+
+  // Step transitions
+  const handleNextFromStep1 = () => {
     setFieldErrors({});
     setCurrentStep(2);
   };
 
-  // Step 4 -> 5 barrier validation
-  const handleNextFromStep4 = () => {
+  const handleNextFromStep2 = () => {
+    setFieldErrors({});
+    setCurrentStep(3);
+  };
+
+  const handleNextFromStep3 = () => {
     if (!bookingDate) {
       setFieldErrors({ bookingDate: 'Vui lòng chọn ngày hẹn' });
       return;
@@ -195,25 +224,22 @@ export function BookingWizardClient({
       return;
     }
     setFieldErrors({});
-    setCurrentStep(5);
+    setCurrentStep(4);
   };
 
   // Submit Handler
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return; // Anti-duplicate client lock
+    if (isSubmitting) return;
 
     setSubmitError(null);
     setFieldErrors({});
 
-    const effectiveServiceId = selectedServiceId || selectedComboId;
-
     // Validate using Zod schema
     const validationResult = CreateBookingSchema.safeParse({
-      serviceId: effectiveServiceId,
+      serviceId: serviceType,
       hairstyleId: selectedHairstyleId || undefined,
       hairColorId: selectedHairColorId || undefined,
-      stylistId: selectedStylistId || undefined,
       bookingDate,
       bookingTime,
       customerName,
@@ -235,24 +261,29 @@ export function BookingWizardClient({
     }
 
     if (!agreedToPolicy) {
-      setFieldErrors({ policy: 'Vui lòng đồng ý với chính sách dịch vụ của salon' });
+      setFieldErrors({ policy: 'Vui lòng đồng ý với chính sách giữ chỗ của salon' });
       return;
     }
 
     try {
       setIsSubmitting(true);
+
+      const serviceDetailStr = getServiceLabel();
+      const combinedNotes = notes.trim()
+        ? `[${serviceDetailStr}] ${notes.trim()}`
+        : `[${serviceDetailStr}]`;
+
       const payload = {
-        serviceId: effectiveServiceId,
+        serviceId: serviceType,
         hairstyleId: selectedHairstyleId || undefined,
         hairColorId: selectedHairColorId || undefined,
-        stylistId: selectedStylistId || undefined,
         bookingDate,
         bookingTime,
         timeSlot: bookingTime,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         customerEmail: customerEmail.trim() || undefined,
-        notes: notes.trim() || undefined,
+        notes: combinedNotes,
         idempotencyKey,
       };
 
@@ -280,7 +311,7 @@ export function BookingWizardClient({
   // SUCCESS SCREEN
   if (bookingSuccess) {
     return (
-      <div className="max-w-2xl mx-auto p-8 rounded-3xl bg-salon-charcoal border border-salon-gold/40 shadow-gold-glow text-center space-y-6 animate-fadeIn">
+      <div className="max-w-2xl mx-auto p-6 sm:p-8 rounded-3xl bg-salon-charcoal border border-salon-gold/40 shadow-gold-glow text-center space-y-6 animate-fadeIn">
         <div className="w-16 h-16 rounded-full bg-salon-gold/20 text-salon-gold mx-auto flex items-center justify-center">
           <CheckCircle2 className="w-10 h-10" />
         </div>
@@ -289,16 +320,16 @@ export function BookingWizardClient({
           <span className="text-xs uppercase tracking-widest text-salon-gold font-bold">
             Tiếp Nhận Thành Công
           </span>
-          <h2 className="text-3xl font-serif font-bold text-white">
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white">
             Lịch Hẹn Của Quý Khách Đã Được Ghi Nhận
           </h2>
           <p className="text-neutral-300 text-sm font-light">
-            Cảm ơn quý khách <strong className="text-white">{customerName}</strong>. Lễ tân Salon Hoàng Gia Prestige sẽ liên hệ qua số điện thoại <strong className="text-salon-gold-light">{customerPhone}</strong> để xác nhận lịch trong ít phút.
+            Cảm ơn quý khách <strong className="text-white">{customerName}</strong>. Lễ tân ACoong Hair Salon sẽ liên hệ qua số điện thoại <strong className="text-salon-gold-light">{customerPhone}</strong> để xác nhận lịch trong ít phút.
           </p>
         </div>
 
         {/* Booking Code Voucher Box */}
-        <div className="p-6 rounded-2xl bg-salon-noir/90 border border-salon-gold/30 space-y-3 text-left">
+        <div className="p-5 sm:p-6 rounded-2xl bg-salon-noir/90 border border-salon-gold/30 space-y-3 text-left">
           <div className="flex items-center justify-between border-b border-white/10 pb-3">
             <span className="text-xs text-neutral-400">Mã lịch hẹn:</span>
             <span className="text-xl font-mono font-bold text-salon-gold">
@@ -306,7 +337,7 @@ export function BookingWizardClient({
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div>
               <span className="text-neutral-400 block">Thời gian hẹn:</span>
               <span className="font-semibold text-white">
@@ -316,17 +347,19 @@ export function BookingWizardClient({
 
             <div>
               <span className="text-neutral-400 block">Dịch vụ:</span>
-              <span className="font-semibold text-white truncate block">
-                {activeCombo?.title || activeService?.title || 'Dịch Vụ Salon'}
+              <span className="font-semibold text-white">
+                {getServiceLabel()}
               </span>
             </div>
 
-            <div>
-              <span className="text-neutral-400 block">Stylist:</span>
-              <span className="font-semibold text-white">
-                {activeStylist ? `Master ${activeStylist.fullName}` : 'Salon sắp xếp chuyên viên phù hợp'}
-              </span>
-            </div>
+            {activeHairstyle && (
+              <div>
+                <span className="text-neutral-400 block">Mẫu tóc tham khảo:</span>
+                <span className="font-semibold text-salon-gold-light">
+                  {activeHairstyle.title || activeHairstyle.name}
+                </span>
+              </div>
+            )}
 
             <div>
               <span className="text-neutral-400 block">Trạng thái:</span>
@@ -348,6 +381,9 @@ export function BookingWizardClient({
             onClick={() => {
               setBookingSuccess(null);
               setCurrentStep(1);
+              setSelectedHairstyleId('');
+              setSelectedHairColorId('');
+              setChemicalOptions([]);
             }}
             className="w-full sm:w-auto px-6 py-3.5 rounded-full border border-white/20 text-neutral-300 hover:text-white text-sm"
           >
@@ -360,18 +396,18 @@ export function BookingWizardClient({
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* 5-Step Progress Stepper */}
+      {/* 4-Step Progress Stepper */}
       <div className="p-4 sm:p-6 rounded-2xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark">
         <div className="flex items-center justify-between relative">
           {[
             { step: 1, label: 'Dịch vụ' },
             { step: 2, label: 'Mẫu tóc' },
-            { step: 3, label: 'Stylist' },
-            { step: 4, label: 'Ngày & Giờ' },
-            { step: 5, label: 'Xác nhận' },
-          ].map((item, idx) => (
+            { step: 3, label: 'Ngày & Giờ' },
+            { step: 4, label: 'Xác nhận' },
+          ].map((item) => (
             <div key={item.step} className="flex flex-col items-center relative z-10">
               <button
+                type="button"
                 onClick={() => {
                   if (item.step < currentStep) setCurrentStep(item.step);
                 }}
@@ -388,7 +424,7 @@ export function BookingWizardClient({
               </button>
               <span
                 className={`text-[11px] mt-2 font-medium hidden sm:block ${
-                  currentStep === item.step ? 'text-salon-gold-light' : 'text-neutral-400'
+                  currentStep === item.step ? 'text-salon-gold-light font-bold' : 'text-neutral-400'
                 }`}
               >
                 {item.label}
@@ -400,145 +436,172 @@ export function BookingWizardClient({
           <div className="absolute top-4 sm:top-5 left-4 right-4 h-0.5 bg-neutral-800 -z-0">
             <div
               className="h-full bg-salon-gold transition-all duration-300"
-              style={{ width: `${((currentStep - 1) / 4) * 100}%` }}
+              style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
             />
           </div>
         </div>
       </div>
 
-      {/* STEP 1: Select Service or Combo */}
+      {/* STEP 1: Select Simplified Service (Cắt thông thường vs Nhuộm/Tẩy/Uốn) */}
       {currentStep === 1 && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark space-y-6">
+        <div className="p-6 sm:p-8 rounded-3xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark space-y-6 animate-fadeIn">
           <div className="space-y-1">
             <span className="text-xs uppercase tracking-widest text-salon-gold font-bold">
-              Bước 1/5: Lựa Chọn Dịch Vụ
+              Bước 1/4: Lựa Chọn Dịch Vụ
             </span>
             <h2 className="text-2xl font-serif font-bold text-white">
-              Chọn Dịch Vụ Tạo Kiểu Hoặc Gói Combo VIP
+              Quý Khách Cần Dịch Vụ Gì Hôm Nay?
             </h2>
+            <p className="text-neutral-400 text-xs sm:text-sm font-light">
+              Chọn nhóm dịch vụ mong muốn để salon bố trí thời gian và trang thiết bị chu đáo nhất.
+            </p>
           </div>
 
-          {fieldErrors.service && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              <span>{fieldErrors.service}</span>
-            </div>
-          )}
+          {/* 2 Clear Primary Service Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+            {/* Option 1: Dịch vụ cắt tóc thông thường */}
+            <div
+              onClick={() => {
+                setServiceType('cat-toc');
+                setFieldErrors({});
+              }}
+              className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between space-y-5 ${
+                serviceType === 'cat-toc'
+                  ? 'bg-salon-gold/15 border-salon-gold shadow-gold-glow scale-[1.01]'
+                  : 'bg-salon-noir/80 border-white/10 hover:border-salon-gold/40'
+              }`}
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-salon-gold/20 border border-salon-gold/40 flex items-center justify-center text-salon-gold">
+                    <Scissors className="w-6 h-6" />
+                  </div>
+                  <div
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${
+                      serviceType === 'cat-toc'
+                        ? 'border-salon-gold bg-salon-gold text-salon-noir'
+                        : 'border-white/30'
+                    }`}
+                  >
+                    {serviceType === 'cat-toc' && <Check className="w-4 h-4 stroke-[3]" />}
+                  </div>
+                </div>
 
-          {/* Combo Packages */}
-          {combos.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-xs uppercase tracking-wider text-salon-gold-light font-semibold">
-                Gói Combo Đặc Quyền (Khuyên Dùng)
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {combos.map((combo) => {
-                  const isSelected = selectedComboId === combo.id || selectedServiceId === combo.id;
+                <div>
+                  <h3 className="font-serif font-bold text-xl text-white">
+                    Cắt Tóc Thông Thường
+                  </h3>
+                  <span className="inline-block mt-1 text-xs text-salon-gold font-medium bg-salon-gold/10 px-2.5 py-0.5 rounded-full border border-salon-gold/25">
+                    Cắt gội & sấy tạo kiểu cơ bản
+                  </span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-neutral-300 font-light leading-relaxed">
+                  Dành cho quý khách có nhu cầu cắt tạo form, cắt tỉa gọn gàng, sấy vuốt sáp tạo kiểu chuẩn phom dáng tóc nam hoặc nữ.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-neutral-400">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-salon-gold" />
+                  <span>Thời gian: ~30 - 45 phút</span>
+                </span>
+                <span className="text-salon-gold font-bold">Chỉ từ 150.000đ</span>
+              </div>
+            </div>
+
+            {/* Option 2: Có sử dụng dịch vụ Nhuộm / Tẩy / Uốn */}
+            <div
+              onClick={() => {
+                setServiceType('uon-nhuom-tay');
+                setFieldErrors({});
+              }}
+              className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between space-y-5 ${
+                serviceType === 'uon-nhuom-tay'
+                  ? 'bg-salon-gold/15 border-salon-gold shadow-gold-glow scale-[1.01]'
+                  : 'bg-salon-noir/80 border-white/10 hover:border-salon-gold/40'
+              }`}
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-salon-gold/20 border border-salon-gold/40 flex items-center justify-center text-salon-gold">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <div
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${
+                      serviceType === 'uon-nhuom-tay'
+                        ? 'border-salon-gold bg-salon-gold text-salon-noir'
+                        : 'border-white/30'
+                    }`}
+                  >
+                    {serviceType === 'uon-nhuom-tay' && <Check className="w-4 h-4 stroke-[3]" />}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-serif font-bold text-xl text-white">
+                    Có Sử Dụng Nhuộm / Tẩy / Uốn
+                  </h3>
+                  <span className="inline-block mt-1 text-xs text-salon-gold font-medium bg-salon-gold/10 px-2.5 py-0.5 rounded-full border border-salon-gold/25">
+                    Hóa chất & phục hồi chuyên sâu
+                  </span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-neutral-300 font-light leading-relaxed">
+                  Dành cho quý khách muốn uốn tạo sóng bồng bềnh, nhuộm màu thời trang, tẩy nâng tông hoặc phục hồi cấu trúc tóc hư tổn.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-neutral-400">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-salon-gold" />
+                  <span>Thời gian: ~1.5 - 3.5 giờ</span>
+                </span>
+                <span className="text-salon-gold font-bold">Tư vấn báo giá tại Salon</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Sub-options for Chemical services (when Option 2 is selected) */}
+          {serviceType === 'uon-nhuom-tay' && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-salon-noir/90 border border-salon-gold/30 space-y-3 animate-fadeIn">
+              <span className="text-xs font-semibold text-salon-gold uppercase tracking-wider block">
+                Tùy chọn dịch vụ quan tâm (Chọn nhiều mục nếu cần):
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  'Uốn tóc tạo kiểu',
+                  'Nhuộm màu thời trang',
+                  'Tẩy tóc nâng tông',
+                  'Phục hồi Keratin',
+                ].map((item) => {
+                  const isChecked = chemicalOptions.includes(item);
                   return (
-                    <div
-                      key={combo.id}
-                      onClick={() => {
-                        setSelectedComboId(combo.id);
-                        setSelectedServiceId(combo.id);
-                        setFieldErrors({});
-                      }}
-                      className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-4 ${
-                        isSelected
-                          ? 'bg-salon-gold/15 border-salon-gold shadow-gold-subtle'
-                          : 'bg-salon-noir/80 border-white/10 hover:border-salon-gold/40'
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggleChemicalOption(item)}
+                      className={`p-2.5 rounded-xl text-xs font-medium border text-left transition flex items-center justify-between ${
+                        isChecked
+                          ? 'bg-salon-gold/20 border-salon-gold text-salon-gold font-semibold'
+                          : 'bg-salon-charcoal/50 border-white/10 text-neutral-300 hover:border-salon-gold/30'
                       }`}
                     >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-salon-gold/20 text-salon-gold border border-salon-gold/30">
-                            Combo VIP - Tiết kiệm {combo.savingsPercent || 25}%
-                          </span>
-                          <h4 className="font-serif font-bold text-lg text-white mt-1.5">
-                            {combo.title || combo.name}
-                          </h4>
-                          <span className="text-[11px] text-neutral-400 flex items-center gap-1 mt-1">
-                            <Clock className="w-3 h-3 text-salon-gold" />
-                            <span>{formatDuration(combo.durationMinutes)}</span>
-                          </span>
-                        </div>
-                        <div
-                          className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                            isSelected ? 'border-salon-gold bg-salon-gold text-salon-noir' : 'border-white/30'
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-white/5 flex items-baseline justify-between">
-                        <span className="text-xs text-neutral-500 line-through">
-                          {formatVND(Number(combo.originalPrice))}
-                        </span>
-                        <span className="text-lg font-bold text-salon-gold font-serif">
-                          {formatVND(Number(combo.packagePrice))}
-                        </span>
-                      </div>
-                    </div>
+                      <span className="truncate">{item}</span>
+                      {isChecked && <Check className="w-3.5 h-3.5 shrink-0 ml-1 text-salon-gold" />}
+                    </button>
                   );
                 })}
               </div>
             </div>
           )}
 
-          {/* Individual Services */}
-          <div className="space-y-3 pt-2">
-            <h3 className="text-xs uppercase tracking-wider text-salon-gold-light font-semibold">
-              Dịch Vụ Lẻ Từng Hạng Mục
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {services.map((srv) => {
-                const isSelected = selectedServiceId === srv.id && selectedComboId !== srv.id;
-                const pMin = Number(srv.priceMin ?? srv.minPrice ?? 0);
-
-                return (
-                  <div
-                    key={srv.id}
-                    onClick={() => {
-                      setSelectedServiceId(srv.id);
-                      setSelectedComboId('');
-                      setFieldErrors({});
-                    }}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
-                      isSelected
-                        ? 'bg-salon-gold/15 border-salon-gold shadow-gold-subtle'
-                        : 'bg-salon-noir/80 border-white/10 hover:border-salon-gold/40'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-salon-gold font-medium">
-                          {srv.category || 'Dịch vụ'}
-                        </span>
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                            isSelected ? 'border-salon-gold bg-salon-gold text-salon-noir' : 'border-white/30'
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3" />}
-                        </div>
-                      </div>
-                      <h4 className="font-serif font-bold text-base text-white mt-1">
-                        {srv.title || srv.name}
-                      </h4>
-                    </div>
-
-                    <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                      <span className="text-neutral-400">{formatDuration(srv.durationMinutes)}</span>
-                      <span className="font-bold text-salon-gold font-serif">{formatVND(pMin)}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="pt-6 border-t border-salon-gold/15 flex justify-end">
+          <div className="pt-6 border-t border-salon-gold/15 flex items-center justify-between">
+            <span className="text-xs text-neutral-400">
+              Đang chọn: <strong className="text-white">{serviceType === 'cat-toc' ? 'Cắt tóc thông thường' : 'Có sử dụng Nhuộm / Tẩy / Uốn'}</strong>
+            </span>
             <button
+              type="button"
               onClick={handleNextFromStep1}
               className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-salon-gold via-salon-gold-light to-salon-gold text-salon-noir font-bold text-xs uppercase tracking-wider hover:opacity-95 shadow-gold-glow transition"
             >
@@ -549,22 +612,27 @@ export function BookingWizardClient({
         </div>
       )}
 
-      {/* STEP 2: Optional Hairstyle & Color */}
+      {/* STEP 2: Optional Hairstyle & Color (Không bắt buộc, có thể Next qua) */}
       {currentStep === 2 && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark space-y-6">
+        <div className="p-6 sm:p-8 rounded-3xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark space-y-6 animate-fadeIn">
           <div className="space-y-1">
-            <span className="text-xs uppercase tracking-widest text-salon-gold font-bold">
-              Bước 2/5: Mẫu Tóc & Màu Nhuộm Tham Khảo
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs uppercase tracking-widest text-salon-gold font-bold">
+                Bước 2/4: Mẫu Tóc Tham Khảo
+              </span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                Không bắt buộc
+              </span>
+            </div>
             <h2 className="text-2xl font-serif font-bold text-white">
-              Chọn Mẫu Tóc / Màu Nhuộm Yêu Thích (Không Bắt Buộc)
+              Chọn Mẫu Tóc Hoặc Màu Nhuộm Bạn Thích
             </h2>
-            <p className="text-neutral-400 text-xs font-light">
-              Giúp Stylist chuẩn bị trước ý tưởng phù hợp với bạn. Quý khách có thể bỏ qua bước này để được tư vấn trực tiếp tại Salon.
+            <p className="text-neutral-400 text-xs sm:text-sm font-light">
+              Giúp thợ salon hình dung phong cách của bạn trước. Bạn hoàn toàn có thể <strong>bấm Tiếp tục</strong> để bỏ qua bước này và được tư vấn trực tiếp tại Salon.
             </p>
           </div>
 
-          {/* Hairstyles Slider/Grid */}
+          {/* Hairstyles Grid */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs uppercase tracking-wider text-salon-gold-light font-semibold">
@@ -572,6 +640,7 @@ export function BookingWizardClient({
               </h3>
               {selectedHairstyleId && (
                 <button
+                  type="button"
                   onClick={() => setSelectedHairstyleId('')}
                   className="text-xs text-salon-gold hover:underline"
                 >
@@ -607,177 +676,96 @@ export function BookingWizardClient({
           </div>
 
           {/* Colors Swatches Grid */}
-          <div className="space-y-3 pt-4 border-t border-white/5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs uppercase tracking-wider text-salon-gold-light font-semibold">
-                Màu Nhuộm Tham Khảo:
-              </h3>
-              {selectedHairColorId && (
-                <button
-                  onClick={() => setSelectedHairColorId('')}
-                  className="text-xs text-salon-gold hover:underline"
-                >
-                  Bỏ chọn màu
-                </button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {colors.slice(0, 4).map((c) => {
-                const isSelected = selectedHairColorId === c.id;
-                return (
-                  <div
-                    key={c.id}
-                    onClick={() => setSelectedHairColorId(isSelected ? '' : c.id)}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition ${
-                      isSelected
-                        ? 'border-salon-gold bg-salon-gold/15 shadow-gold-subtle'
-                        : 'border-white/10 bg-salon-noir/80 hover:border-salon-gold/40'
-                    }`}
+          {colors.length > 0 && (
+            <div className="space-y-3 pt-4 border-t border-white/5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs uppercase tracking-wider text-salon-gold-light font-semibold">
+                  Màu Nhuộm Tham Khảo:
+                </h3>
+                {selectedHairColorId && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedHairColorId('')}
+                    className="text-xs text-salon-gold hover:underline"
                   >
-                    <div
-                      className="w-7 h-7 rounded-full border border-white/20 flex-shrink-0"
-                      style={{ backgroundColor: c.hexCode || c.hexColor }}
-                    />
-                    <div className="truncate text-xs text-white font-medium">
-                      {c.name}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                    Bỏ chọn màu
+                  </button>
+                )}
+              </div>
 
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {colors.slice(0, 4).map((c) => {
+                  const isSelected = selectedHairColorId === c.id;
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => setSelectedHairColorId(isSelected ? '' : c.id)}
+                      className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition ${
+                        isSelected
+                          ? 'border-salon-gold bg-salon-gold/15 shadow-gold-subtle'
+                          : 'border-white/10 bg-salon-noir/80 hover:border-salon-gold/40'
+                      }`}
+                    >
+                      <div
+                        className="w-7 h-7 rounded-full border border-white/20 flex-shrink-0"
+                        style={{ backgroundColor: c.hexCode || c.hexColor }}
+                      />
+                      <div className="truncate text-xs text-white font-medium">
+                        {c.name}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2 Actions: Can ALWAYS Next / Skip past */}
           <div className="pt-6 border-t border-salon-gold/15 flex items-center justify-between">
             <button
+              type="button"
               onClick={() => setCurrentStep(1)}
               className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full border border-white/20 text-xs text-neutral-300 hover:text-white"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Quay Lại</span>
             </button>
-            <button
-              onClick={() => setCurrentStep(3)}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-salon-gold via-salon-gold-light to-salon-gold text-salon-noir font-bold text-xs uppercase tracking-wider hover:opacity-95 shadow-gold-glow transition"
-            >
-              <span>Tiếp Tục Chọn Stylist</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleNextFromStep2}
+                className="text-xs text-neutral-400 hover:text-salon-gold underline hidden sm:inline"
+              >
+                Bỏ qua bước này
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNextFromStep2}
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-salon-gold via-salon-gold-light to-salon-gold text-salon-noir font-bold text-xs uppercase tracking-wider hover:opacity-95 shadow-gold-glow transition"
+              >
+                <span>Tiếp Tục Chọn Ngày Giờ</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* STEP 3: Select Stylist */}
+      {/* STEP 3: Pick Date & Time Slot (08:30 - 20:30) */}
       {currentStep === 3 && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark space-y-6">
+        <div className="p-6 sm:p-8 rounded-3xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark space-y-6 animate-fadeIn">
           <div className="space-y-1">
             <span className="text-xs uppercase tracking-widest text-salon-gold font-bold">
-              Bước 3/5: Chọn Chuyên Gia
+              Bước 3/4: Thời Gian Hẹn
             </span>
             <h2 className="text-2xl font-serif font-bold text-white">
-              Lựa Chọn Master Stylist Thực Hiện
+              Chọn Ngày & Khung Giờ Đến Salon
             </h2>
-          </div>
-
-          {/* Option A: Any Stylist (Default) */}
-          <div
-            onClick={() => setSelectedStylistId('')}
-            className={`p-5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-              selectedStylistId === ''
-                ? 'bg-salon-gold/15 border-salon-gold shadow-gold-subtle'
-                : 'bg-salon-noir/80 border-white/10 hover:border-salon-gold/40'
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-salon-gold/20 border border-salon-gold/40 flex items-center justify-center text-salon-gold">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-serif font-bold text-lg text-white">
-                  Bất Kỳ Master Stylist Nào Sẵn Sàng (Khuyên Dùng)
-                </h4>
-                <p className="text-xs text-neutral-400 font-light mt-0.5">
-                  Salon sẽ tự động điều phối chuyên viên tay nghề cao phù hợp nhất với khung giờ của bạn.
-                </p>
-              </div>
-            </div>
-            <div
-              className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                selectedStylistId === '' ? 'border-salon-gold bg-salon-gold text-salon-noir' : 'border-white/30'
-              }`}
-            >
-              {selectedStylistId === '' && <Check className="w-3.5 h-3.5" />}
-            </div>
-          </div>
-
-          {/* Option B: Specific Stylists */}
-          <div className="space-y-3">
-            <h3 className="text-xs uppercase tracking-wider text-salon-gold-light font-semibold">
-              Hoặc Chỉ Định Stylist Yêu Thích:
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {stylists.map((st) => {
-                const isSelected = selectedStylistId === st.id;
-                return (
-                  <div
-                    key={st.id}
-                    onClick={() => setSelectedStylistId(st.id)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
-                      isSelected
-                        ? 'bg-salon-gold/15 border-salon-gold shadow-gold-subtle'
-                        : 'bg-salon-noir/80 border-white/10 hover:border-salon-gold/40'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={st.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                        alt={st.fullName}
-                        className="w-11 h-11 rounded-full object-cover border border-salon-gold/30"
-                      />
-                      <div>
-                        <h4 className="font-semibold text-sm text-white">
-                          Master {st.fullName}
-                        </h4>
-                        <span className="text-[11px] text-salon-gold-light">
-                          {st.experienceYears || 8} năm kinh nghiệm
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="pt-6 border-t border-salon-gold/15 flex items-center justify-between">
-            <button
-              onClick={() => setCurrentStep(2)}
-              className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full border border-white/20 text-xs text-neutral-300 hover:text-white"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Quay Lại</span>
-            </button>
-            <button
-              onClick={() => setCurrentStep(4)}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-salon-gold via-salon-gold-light to-salon-gold text-salon-noir font-bold text-xs uppercase tracking-wider hover:opacity-95 shadow-gold-glow transition"
-            >
-              <span>Tiếp Tục Chọn Ngày Giờ</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 4: Pick Date & Time Slot (08:30 - 20:30) */}
-      {currentStep === 4 && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark space-y-6">
-          <div className="space-y-1">
-            <span className="text-xs uppercase tracking-widest text-salon-gold font-bold">
-              Bước 4/5: Thời Gian Hẹn
-            </span>
-            <h2 className="text-2xl font-serif font-bold text-white">
-              Chọn Ngày & Khung Giờ Mở Cửa (08:30 - 20:30)
-            </h2>
+            <p className="text-neutral-400 text-xs sm:text-sm font-light">
+              Giờ mở cửa phục vụ: <strong>08:30 - 20:30 Hàng ngày</strong>.
+            </p>
           </div>
 
           {/* Date Picker Buttons */}
@@ -789,6 +777,7 @@ export function BookingWizardClient({
               {dateOptions.map((opt) => (
                 <button
                   key={opt.dateStr}
+                  type="button"
                   onClick={() => setBookingDate(opt.dateStr)}
                   className={`py-2 px-4 rounded-xl text-xs font-medium transition whitespace-nowrap ${
                     bookingDate === opt.dateStr
@@ -819,6 +808,7 @@ export function BookingWizardClient({
                 return (
                   <button
                     key={slot}
+                    type="button"
                     onClick={() => {
                       setBookingTime(slot);
                       setFieldErrors({});
@@ -838,14 +828,16 @@ export function BookingWizardClient({
 
           <div className="pt-6 border-t border-salon-gold/15 flex items-center justify-between">
             <button
-              onClick={() => setCurrentStep(3)}
+              type="button"
+              onClick={() => setCurrentStep(2)}
               className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full border border-white/20 text-xs text-neutral-300 hover:text-white"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Quay Lại</span>
             </button>
             <button
-              onClick={handleNextFromStep4}
+              type="button"
+              onClick={handleNextFromStep3}
               className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-salon-gold via-salon-gold-light to-salon-gold text-salon-noir font-bold text-xs uppercase tracking-wider hover:opacity-95 shadow-gold-glow transition"
             >
               <span>Tiếp Tục Nhập Thông Tin</span>
@@ -855,19 +847,22 @@ export function BookingWizardClient({
         </div>
       )}
 
-      {/* STEP 5: Customer Details & Final Confirmation */}
-      {currentStep === 5 && (
+      {/* STEP 4: Customer Details & Final Confirmation */}
+      {currentStep === 4 && (
         <form
           onSubmit={handleFinalSubmit}
-          className="p-6 sm:p-8 rounded-3xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark space-y-6"
+          className="p-6 sm:p-8 rounded-3xl bg-salon-charcoal/80 border border-salon-gold/20 shadow-luxury-dark space-y-6 animate-fadeIn"
         >
           <div className="space-y-1">
             <span className="text-xs uppercase tracking-widest text-salon-gold font-bold">
-              Bước 5/5: Thông Tin Khách Hàng & Xác Nhận
+              Bước 4/4: Thông Tin Khách Hàng & Xác Nhận
             </span>
             <h2 className="text-2xl font-serif font-bold text-white">
               Hoàn Tất Đặt Lịch Hẹn
             </h2>
+            <p className="text-neutral-400 text-xs sm:text-sm font-light">
+              Vui lòng điền thông tin liên hệ để nhân viên salon xác nhận và đón tiếp bạn đúng giờ.
+            </p>
           </div>
 
           {submitError && (
@@ -888,7 +883,7 @@ export function BookingWizardClient({
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Ví dụ: Nguyễn Phương Thảo"
+                placeholder="Ví dụ: Nguyễn Văn A"
                 className={`w-full px-4 py-2.5 rounded-xl bg-salon-noir border text-sm text-white focus:outline-none transition ${
                   fieldErrors.customerName ? 'border-rose-500' : 'border-salon-gold/30 focus:border-salon-gold'
                 }`}
@@ -907,7 +902,7 @@ export function BookingWizardClient({
                 type="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="Ví dụ: 0908123456"
+                placeholder="Ví dụ: 0981438118"
                 className={`w-full px-4 py-2.5 rounded-xl bg-salon-noir border text-sm text-white focus:outline-none transition ${
                   fieldErrors.customerPhone ? 'border-rose-500' : 'border-salon-gold/30 focus:border-salon-gold'
                 }`}
@@ -926,7 +921,7 @@ export function BookingWizardClient({
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
-                placeholder="Ví dụ: phuongthao@example.com"
+                placeholder="Ví dụ: email@example.com"
                 className="w-full px-4 py-2.5 rounded-xl bg-salon-noir border border-salon-gold/30 focus:border-salon-gold text-sm text-white focus:outline-none transition"
               />
             </div>
@@ -944,7 +939,7 @@ export function BookingWizardClient({
                 maxLength={500}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Ví dụ: Tư vấn thêm về uốn phồng chân tóc, da đầu nhạy cảm..."
+                placeholder="Ví dụ: Tư vấn thêm về dáng tóc hợp mặt tròn, da đầu nhạy cảm..."
                 className="w-full px-4 py-2.5 rounded-xl bg-salon-noir border border-salon-gold/30 focus:border-salon-gold text-sm text-white focus:outline-none transition"
               />
             </div>
@@ -955,11 +950,11 @@ export function BookingWizardClient({
             <h4 className="text-xs font-bold uppercase tracking-wider text-salon-gold">
               Tóm Tắt Lịch Hẹn
             </h4>
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div>
                 <span className="text-neutral-400 block">Dịch vụ:</span>
                 <span className="font-semibold text-white">
-                  {activeCombo?.title || activeService?.title || 'Dịch vụ Salon'}
+                  {getServiceLabel()}
                 </span>
               </div>
               <div>
@@ -968,16 +963,18 @@ export function BookingWizardClient({
                   {bookingTime} ngày {bookingDate}
                 </span>
               </div>
-              <div>
-                <span className="text-neutral-400 block">Stylist:</span>
-                <span className="font-semibold text-white">
-                  {activeStylist ? `Master ${activeStylist.fullName}` : 'Bất kỳ Stylist sẵn sàng'}
-                </span>
-              </div>
+              {activeHairstyle && (
+                <div>
+                  <span className="text-neutral-400 block">Mẫu tóc tham khảo:</span>
+                  <span className="font-semibold text-salon-gold-light">
+                    {activeHairstyle.title || activeHairstyle.name}
+                  </span>
+                </div>
+              )}
               <div>
                 <span className="text-neutral-400 block">Thanh toán:</span>
                 <span className="font-semibold text-salon-gold-light">
-                  Tại salon sau khi làm
+                  Thanh toán tại salon sau khi làm
                 </span>
               </div>
             </div>
@@ -993,7 +990,7 @@ export function BookingWizardClient({
               className="mt-0.5 rounded border-salon-gold text-salon-gold focus:ring-0 cursor-pointer"
             />
             <label htmlFor="policy-check" className="text-xs text-neutral-300 cursor-pointer leading-relaxed">
-              Tôi đồng ý với chính sách dịch vụ, giữ chỗ và bảo mật thông tin cá nhân của Salon Hoàng Gia Prestige.
+              Tôi đồng ý với chính sách dịch vụ, giữ chỗ và bảo mật thông tin cá nhân của salon.
             </label>
           </div>
           {fieldErrors.policy && (
@@ -1003,7 +1000,7 @@ export function BookingWizardClient({
           <div className="pt-6 border-t border-salon-gold/15 flex items-center justify-between">
             <button
               type="button"
-              onClick={() => setCurrentStep(4)}
+              onClick={() => setCurrentStep(3)}
               disabled={isSubmitting}
               className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full border border-white/20 text-xs text-neutral-300 hover:text-white disabled:opacity-50"
             >

@@ -9,11 +9,11 @@ import {
 import { BookingWizardClient } from '@/components/public/BookingWizardClient';
 
 export const metadata: Metadata = {
-  title: 'Đặt Lịch Hẹn Trực Tuyến 24/7 | Công Nguyễn Hair Salon',
-  description: 'Đặt lịch hẹn làm tóc nhanh chóng theo 5 bước: Chọn dịch vụ, kiểu tóc, Master Stylist, ngày giờ và thông tin cá nhân. Cam kết không chờ đợi, giữ chỗ chuẩn xác.',
+  title: 'Đặt Lịch Hẹn Trực Tuyến 24/7 | ACoong Hair Salon',
+  description: 'Đặt lịch hẹn làm tóc nhanh chóng: Chọn dịch vụ cắt tóc thông thường hoặc nhuộm tẩy uốn, mẫu tóc tham khảo (tùy chọn), ngày giờ và thông tin liên hệ. Cam kết không chờ đợi, giữ chỗ chuẩn xác.',
   openGraph: {
-    title: 'Đặt Lịch Hẹn Trực Tuyến 24/7 | Công Nguyễn Hair Salon',
-    description: 'Đặt lịch hẹn làm tóc nhanh chóng theo 5 bước tại Công Nguyễn Hair Salon.',
+    title: 'Đặt Lịch Hẹn Trực Tuyến 24/7 | ACoong Hair Salon',
+    description: 'Đặt lịch hẹn làm tóc nhanh chóng tại ACoong Hair Salon.',
   },
 };
 
@@ -39,7 +39,7 @@ export default async function BookingPage() {
             Đặt Lịch Hẹn Trực Tuyến
           </h1>
           <p className="text-neutral-300 max-w-2xl mx-auto text-sm md:text-base font-light leading-relaxed">
-            Chủ động lựa chọn Master Stylist, dịch vụ yêu thích và khung giờ phù hợp với bạn. Salon cam kết giữ chỗ đúng hẹn và bảo hành dịch vụ 7 ngày.
+            Chủ động lựa chọn dịch vụ yêu thích và khung giờ phù hợp với bạn. Salon cam kết giữ chỗ đúng hẹn và phục vụ tận tâm.
           </p>
         </div>
       </section>

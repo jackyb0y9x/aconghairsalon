@@ -82,14 +82,51 @@ export async function POST(request: NextRequest) {
       // 3. Resolve service existence if provided
       let serviceId: string | null = null;
       let comboId: string | null = null;
+      let serviceTitleForNotes = '';
 
       if (input.serviceId) {
         try {
-          const srv = await prisma.service.findFirst({
+          // A. Exact match by id or slug
+          let srv = await prisma.service.findFirst({
             where: {
               OR: [{ id: input.serviceId }, { slug: input.serviceId }],
             },
           });
+
+          // B. Match by common category/name
+          if (!srv) {
+            const low = input.serviceId.toLowerCase();
+            if (low === 'cat-toc' || low.includes('cat')) {
+              srv = await prisma.service.findFirst({
+                where: {
+                  OR: [
+                    { slug: { contains: 'cat', mode: 'insensitive' } },
+                    { title: { contains: 'Cắt', mode: 'insensitive' } },
+                  ],
+                },
+              });
+              serviceTitleForNotes = 'Cắt tóc thông thường';
+            } else if (
+              low === 'uon-nhuom-tay' ||
+              low.includes('uon') ||
+              low.includes('nhuom') ||
+              low.includes('tay') ||
+              low.includes('hoa-chat')
+            ) {
+              srv = await prisma.service.findFirst({
+                where: {
+                  OR: [
+                    { slug: { contains: 'uon', mode: 'insensitive' } },
+                    { title: { contains: 'Uốn', mode: 'insensitive' } },
+                    { slug: { contains: 'nhuom', mode: 'insensitive' } },
+                    { title: { contains: 'Nhuộm', mode: 'insensitive' } },
+                  ],
+                },
+              });
+              serviceTitleForNotes = 'Có sử dụng dịch vụ Nhuộm / Tẩy / Uốn';
+            }
+          }
+
           if (srv) {
             serviceId = srv.id;
           } else {
@@ -101,35 +138,17 @@ export async function POST(request: NextRequest) {
             if (combo) {
               comboId = combo.id;
             } else {
-              const memSrv = memoryStore.findServiceById(input.serviceId) || memoryStore.services.find((s) => s.slug === input.serviceId);
-              if (memSrv) {
-                serviceId = memSrv.id;
-              } else {
-                const memCombo = memoryStore.findComboById(input.serviceId) || memoryStore.combos.find((c) => c.slug === input.serviceId);
-                if (memCombo) {
-                  comboId = memCombo.id;
-                } else {
-                  serviceId = input.serviceId;
-                }
-              }
+              // Fallback to any active service in DB so relation is valid
+              const anySrv = await prisma.service.findFirst({ where: { isActive: true } });
+              serviceId = anySrv ? anySrv.id : null;
             }
           }
         } catch {
-          const memSrv = memoryStore.findServiceById(input.serviceId) || memoryStore.services.find((s) => s.slug === input.serviceId);
-          if (memSrv) {
-            serviceId = memSrv.id;
-          } else {
-            const memCombo = memoryStore.findComboById(input.serviceId) || memoryStore.combos.find((c) => c.slug === input.serviceId);
-            if (memCombo) {
-              comboId = memCombo.id;
-            } else {
-              serviceId = input.serviceId;
-            }
-          }
+          serviceId = null;
         }
       }
 
-      // 4. Resolve hairstyleRefId
+      // 4. Resolve hairstyleRefId safely
       let hairstyleRefId: string | null = null;
       if (input.hairstyleId) {
         try {
@@ -138,14 +157,13 @@ export async function POST(request: NextRequest) {
               OR: [{ id: input.hairstyleId }, { slug: input.hairstyleId }],
             },
           });
-          hairstyleRefId = hs ? hs.id : (memoryStore.findHairstyleById(input.hairstyleId)?.id || input.hairstyleId);
+          hairstyleRefId = hs ? hs.id : null;
         } catch {
-          const memHs = memoryStore.findHairstyleById(input.hairstyleId) || memoryStore.hairstyles.find((h) => h.slug === input.hairstyleId);
-          hairstyleRefId = memHs ? memHs.id : input.hairstyleId;
+          hairstyleRefId = null;
         }
       }
 
-      // 5. Resolve hairColorRefId
+      // 5. Resolve hairColorRefId safely
       let hairColorRefId: string | null = null;
       if (input.hairColorId) {
         try {
@@ -154,14 +172,13 @@ export async function POST(request: NextRequest) {
               OR: [{ id: input.hairColorId }, { code: input.hairColorId }],
             },
           });
-          hairColorRefId = hc ? hc.id : (memoryStore.findHairColorById(input.hairColorId)?.id || input.hairColorId);
+          hairColorRefId = hc ? hc.id : null;
         } catch {
-          const memColor = memoryStore.findHairColorById(input.hairColorId) || memoryStore.hairColors.find((c) => c.code === input.hairColorId);
-          hairColorRefId = memColor ? memColor.id : input.hairColorId;
+          hairColorRefId = null;
         }
       }
 
-      // 6. Resolve stylist
+      // 6. Resolve stylist safely
       let assignedStylistId: string | null = null;
       if (input.stylistId) {
         try {
@@ -172,19 +189,26 @@ export async function POST(request: NextRequest) {
               isActive: true,
             },
           });
-          assignedStylistId = stylist ? stylist.id : input.stylistId;
+          assignedStylistId = stylist ? stylist.id : null;
         } catch {
-          assignedStylistId = input.stylistId;
+          assignedStylistId = null;
         }
       }
 
       const timeSlot = input.bookingTime || (input as any).timeSlot || '14:30';
 
+      let combinedNotes = input.notes?.trim() || '';
+      if (serviceTitleForNotes && !combinedNotes.includes(serviceTitleForNotes)) {
+        combinedNotes = combinedNotes
+          ? `[${serviceTitleForNotes}] ${combinedNotes}`
+          : `[${serviceTitleForNotes}]`;
+      }
+
       const bookingPayload = {
         bookingCode,
-        customerName: input.customerName,
-        customerPhone: input.customerPhone,
-        customerEmail: input.customerEmail || null,
+        customerName: input.customerName.trim(),
+        customerPhone: input.customerPhone.trim(),
+        customerEmail: input.customerEmail ? input.customerEmail.trim() : null,
         bookingDate,
         timeSlot,
         serviceId,
@@ -193,7 +217,7 @@ export async function POST(request: NextRequest) {
         hairColorRefId,
         assignedStylistId,
         status: 'PENDING' as BookingStatus,
-        notes: input.notes || null,
+        notes: combinedNotes || null,
         idempotencyKey: input.idempotencyKey || null,
       };
 
@@ -209,7 +233,8 @@ export async function POST(request: NextRequest) {
             assignedStylist: true,
           },
         });
-      } catch {
+      } catch (dbErr) {
+        console.error('Failed to create booking in DB:', dbErr);
         newBooking = memoryStore.createBooking({
           ...bookingPayload,
           bookingDate: input.bookingDate,
