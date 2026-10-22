@@ -114,11 +114,11 @@ export function AdminHeader({ user }: AdminHeaderProps) {
           {pendingCount !== null && pendingCount > 0 && (
             <Link
               href="/admin/bookings?status=PENDING"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 transition-all group"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 hover:bg-amber-200 dark:bg-amber-500/15 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/25 transition-all group shadow-sm"
               title="Xem danh sách lịch hẹn chờ xác nhận"
             >
               <div className="relative">
-                <Bell className="w-4 h-4 text-amber-400" />
+                <Bell className="w-4 h-4 text-amber-700 dark:text-amber-400" />
                 <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
                 <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500"></span>
               </div>

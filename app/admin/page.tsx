@@ -109,23 +109,23 @@ export default async function AdminDashboardPage() {
 
       {/* 2. Banner Cảnh Báo Lịch Hẹn Chờ Duyệt (Chỉ hiển thị khi có lịch PENDING) */}
       {pendingBookingsCount > 0 && (
-        <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-600/10 to-transparent border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-amber-950/20">
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 shadow-md shadow-amber-500/5 dark:bg-gradient-to-r dark:from-amber-500/20 dark:via-amber-600/10 dark:to-transparent dark:border-amber-500/30 dark:shadow-amber-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
           <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 text-amber-700 dark:bg-amber-500/20 dark:border-amber-500/40 dark:text-amber-300 flex items-center justify-center flex-shrink-0 shadow-sm">
               <Clock className="w-5 h-5 animate-pulse" />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-amber-200">
+              <h3 className="text-sm sm:text-base font-bold text-amber-950 dark:text-amber-200 tracking-tight">
                 Có {pendingBookingsCount} lịch hẹn trực tuyến đang chờ xác nhận!
               </h3>
-              <p className="text-xs text-amber-300/80 mt-0.5">
+              <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-300/80 mt-0.5 font-medium leading-relaxed">
                 Vui lòng kiểm tra và gọi điện xác nhận dịch vụ cho khách hàng trong vòng 15 phút.
               </p>
             </div>
           </div>
           <Link
             href="/admin/bookings?status=PENDING"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-salon-gold hover:bg-salon-gold-hover text-salon-noir font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-gold-subtle flex-shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white dark:bg-salon-gold dark:hover:bg-salon-gold-hover dark:text-salon-noir font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-sm flex-shrink-0 hover:scale-102"
           >
             <span>Xử lý ngay</span>
             <ArrowRight className="w-4 h-4" />

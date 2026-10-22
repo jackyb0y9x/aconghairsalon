@@ -168,17 +168,17 @@ export function BookingsManagementClient({ initialBookings, stylists }: Props) {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-zinc-800">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-zinc-200 dark:border-zinc-800">
         <button
           onClick={() => setActiveTab('ALL')}
           className={`px-3 py-2 text-xs font-semibold whitespace-nowrap rounded-t-lg transition-colors border-b-2 flex items-center gap-1.5 ${
             activeTab === 'ALL'
-              ? 'border-salon-gold text-salon-gold bg-salon-gold/5'
-              : 'border-transparent text-zinc-400 hover:text-zinc-200'
+              ? 'border-salon-gold text-amber-900 bg-amber-50 dark:text-salon-gold dark:bg-salon-gold/5'
+              : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
           }`}
         >
           <span>Tất cả</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-zinc-800 text-zinc-300">
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300 font-semibold">
             {counts.ALL}
           </span>
         </button>
@@ -187,12 +187,12 @@ export function BookingsManagementClient({ initialBookings, stylists }: Props) {
           onClick={() => setActiveTab('PENDING')}
           className={`px-3 py-2 text-xs font-semibold whitespace-nowrap rounded-t-lg transition-colors border-b-2 flex items-center gap-1.5 ${
             activeTab === 'PENDING'
-              ? 'border-amber-400 text-amber-400 bg-amber-950/20'
-              : 'border-transparent text-zinc-400 hover:text-zinc-200'
+              ? 'border-amber-500 text-amber-900 bg-amber-50 dark:border-amber-400 dark:text-amber-400 dark:bg-amber-950/20'
+              : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
           }`}
         >
           <span>⏳ Chờ xác nhận</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-950 text-amber-300 border border-amber-800">
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800 font-bold">
             {counts.PENDING}
           </span>
         </button>
@@ -201,12 +201,12 @@ export function BookingsManagementClient({ initialBookings, stylists }: Props) {
           onClick={() => setActiveTab('CONFIRMED')}
           className={`px-3 py-2 text-xs font-semibold whitespace-nowrap rounded-t-lg transition-colors border-b-2 flex items-center gap-1.5 ${
             activeTab === 'CONFIRMED'
-              ? 'border-blue-400 text-blue-400 bg-blue-950/20'
-              : 'border-transparent text-zinc-400 hover:text-zinc-200'
+              ? 'border-blue-500 text-blue-900 bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:bg-blue-950/20'
+              : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
           }`}
         >
           <span>✓ Đã xác nhận</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-950 text-blue-300 border border-blue-800">
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-900 border border-blue-300 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 font-semibold">
             {counts.CONFIRMED}
           </span>
         </button>
@@ -215,12 +215,12 @@ export function BookingsManagementClient({ initialBookings, stylists }: Props) {
           onClick={() => setActiveTab('COMPLETED')}
           className={`px-3 py-2 text-xs font-semibold whitespace-nowrap rounded-t-lg transition-colors border-b-2 flex items-center gap-1.5 ${
             activeTab === 'COMPLETED'
-              ? 'border-emerald-400 text-emerald-400 bg-emerald-950/20'
-              : 'border-transparent text-zinc-400 hover:text-zinc-200'
+              ? 'border-emerald-500 text-emerald-900 bg-emerald-50 dark:border-emerald-400 dark:text-emerald-400 dark:bg-emerald-950/20'
+              : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
           }`}
         >
           <span>★ Đã phục vụ</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800">
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800 font-semibold">
             {counts.COMPLETED}
           </span>
         </button>
@@ -229,12 +229,12 @@ export function BookingsManagementClient({ initialBookings, stylists }: Props) {
           onClick={() => setActiveTab('CANCELLED')}
           className={`px-3 py-2 text-xs font-semibold whitespace-nowrap rounded-t-lg transition-colors border-b-2 flex items-center gap-1.5 ${
             activeTab === 'CANCELLED'
-              ? 'border-rose-500 text-rose-400 bg-rose-950/20'
-              : 'border-transparent text-zinc-400 hover:text-zinc-200'
+              ? 'border-rose-500 text-rose-900 bg-rose-50 dark:border-rose-500 dark:text-rose-400 dark:bg-rose-950/20'
+              : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
           }`}
         >
           <span>✕ Đã hủy</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-950 text-rose-300 border border-rose-800">
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800 font-semibold">
             {counts.CANCELLED}
           </span>
         </button>
@@ -243,12 +243,12 @@ export function BookingsManagementClient({ initialBookings, stylists }: Props) {
           onClick={() => setActiveTab('NO_SHOW')}
           className={`px-3 py-2 text-xs font-semibold whitespace-nowrap rounded-t-lg transition-colors border-b-2 flex items-center gap-1.5 ${
             activeTab === 'NO_SHOW'
-              ? 'border-zinc-500 text-zinc-300 bg-zinc-800/40'
-              : 'border-transparent text-zinc-400 hover:text-zinc-200'
+              ? 'border-zinc-500 text-zinc-900 bg-zinc-100 dark:border-zinc-500 dark:text-zinc-300 dark:bg-zinc-800/40'
+              : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
           }`}
         >
           <span>∅ Khách không đến</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-zinc-800 text-zinc-400">
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400 font-semibold">
             {counts.NO_SHOW}
           </span>
         </button>
@@ -350,27 +350,27 @@ export function BookingsManagementClient({ initialBookings, stylists }: Props) {
                     </td>
                     <td className="py-3 px-4 text-center">
                       {b.status === 'PENDING' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-950/60 text-amber-300 border border-amber-800">
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
                           Chờ xác nhận
                         </span>
                       )}
                       {b.status === 'CONFIRMED' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-950/60 text-blue-300 border border-blue-800">
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-900 border border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                           Đã xác nhận
                         </span>
                       )}
                       {b.status === 'COMPLETED' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800">
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
                           Đã phục vụ
                         </span>
                       )}
                       {b.status === 'CANCELLED' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-950/60 text-rose-300 border border-rose-800">
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
                           Đã hủy
                         </span>
                       )}
                       {b.status === 'NO_SHOW' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 text-zinc-700 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700">
                           Không đến
                         </span>
                       )}
