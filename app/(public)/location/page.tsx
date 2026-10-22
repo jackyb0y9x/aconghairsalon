@@ -44,7 +44,7 @@ function extractEmbedSrc(rawUrl?: string | null): string {
 }
 
 const DEFAULT_MAP_URL =
-  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d479.93252252100655!2d106.61087903989699!3d20.78488568895623!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314a76dcf205a86d%3A0xf613dd1e2cbc6902!2zTmd1eeG7h3QgQW5nLCBUaMOhaSBTxqFuLCBBbiBMw6NvLCBI4bqjaSBQaMOybmcsIFZp4buHdCBOYW0!5e0!3m2!1svi!2s!4v1792572457657!5m2!1svi!2s';
+  'https://maps.google.com/maps?q=20.785293,106.610434&hl=vi&z=18&output=embed';
 
 export default async function LocationPage() {
   const settings = await getPublicSiteSettings();
@@ -58,10 +58,8 @@ export default async function LocationPage() {
 
   const embedMapUrl = extractEmbedSrc(settings?.googleMapsEmbedUrl) || DEFAULT_MAP_URL;
 
-  // Link chỉ đường trực tiếp trên Google Maps
-  const googleMapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-    `${brandName}, ${address}`
-  )}`;
+  // Link chỉ đường trực tiếp trên Google Maps tới tọa độ salon
+  const googleMapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=20.785293,106.610434';
 
   return (
     <div className="min-h-screen py-8 sm:py-12 bg-salon-noir transition-colors duration-300">

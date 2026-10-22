@@ -22,7 +22,7 @@ export const DEFAULT_SITE_SETTINGS = {
   hotlineSecondary: '0981438118',
   emailContact: 'contact@congnguyenhair.vn',
   addressFull: 'Nguyệt Áng 3, An Khánh, Hải Phòng',
-  googleMapsEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d479.93252252100655!2d106.61087903989699!3d20.78488568895623!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314a76dcf205a86d%3A0xf613dd1e2cbc6902!2zTmd1eeG7h3QgQW5nLCBUaMOhaSBTxqFuLCBBbiBMw6NvLCBI4bqjaSBQaMOybmc!5e0!3m2!1svi!2s!4v1792572457657!5m2!1svi!2s',
+  googleMapsEmbedUrl: '<iframe src="https://maps.google.com/maps?q=20.785293,106.610434&hl=vi&z=18&output=embed" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>',
   openingHours: {
     monday_friday: '08:30 - 20:30 Hàng ngày',
     weekend: '08:00 - 21:00',

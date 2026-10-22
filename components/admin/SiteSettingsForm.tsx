@@ -24,6 +24,15 @@ interface SiteSettingsFormProps {
   initialData: any;
 }
 
+function extractEmbedSrc(input?: string | null): string {
+  if (!input) return '';
+  const match = input.match(/src=["'](.*?)["']/i);
+  if (match && match[1]) {
+    return match[1];
+  }
+  return input.trim();
+}
+
 export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
   const [activeTab, setActiveTab] = useState<'brand' | 'contact' | 'social' | 'maps' | 'seo'>('brand');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -408,34 +417,57 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="p-6 rounded-xl bg-salon-charcoal/80 border border-salon-gold/15 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
-                  Mã Nhúng Bản Đồ Google Maps (Embed Iframe URL)
-                </label>
-                <input
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
+                  <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                    Mã Nhúng Bản Đồ Google Maps (Đoạn mã &lt;iframe&gt; hoặc liên kết Embed)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setValue(
+                        'googleMapsEmbedUrl',
+                        '<iframe src="https://maps.google.com/maps?q=20.785293,106.610434&hl=vi&z=18&output=embed" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>',
+                        { shouldDirty: true }
+                      )
+                    }
+                    className="text-[11px] text-salon-gold hover:underline flex items-center gap-1 font-medium text-left"
+                  >
+                    Điền mã nhúng salon ACoong (20.785293, 106.610434)
+                  </button>
+                </div>
+                <textarea
                   {...register('googleMapsEmbedUrl')}
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-salon-noir border border-zinc-700 text-salon-ivory text-sm focus:border-salon-gold focus:outline-none font-mono text-xs"
-                  placeholder="https://www.google.com/maps/embed?pb=..."
+                  rows={4}
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-salon-noir border border-zinc-700 text-salon-ivory text-sm focus:border-salon-gold focus:outline-none font-mono text-xs leading-relaxed"
+                  placeholder='<iframe src="https://maps.google.com/maps?q=20.785293,106.610434&hl=vi&z=18&output=embed" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>'
                 />
-                <p className="text-xs text-zinc-500 mt-1.5">
-                  Dán URL `src` từ mã nhúng iframe của Google Maps để hiển thị bản đồ trên trang liên hệ.
+                <p className="text-xs text-zinc-400 mt-1.5">
+                  Hỗ trợ dán nguyên đoạn mã <code>&lt;iframe&gt;</code> từ Google Maps hoặc đường dẫn link <code>src</code>. Hệ thống sẽ tự động trích xuất và hiển thị iframe chuẩn xác.
                 </p>
               </div>
 
               {/* Map Preview */}
               {watchMapsUrl && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    Xem Trước Bản Đồ Nhúng
-                  </h4>
-                  <div className="w-full h-64 rounded-xl overflow-hidden border border-salon-gold/20 bg-salon-noir">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                      Xem Trước Bản Đồ Nhúng
+                    </h4>
+                    {extractEmbedSrc(watchMapsUrl) && (
+                      <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 truncate max-w-xs sm:max-w-md">
+                        {extractEmbedSrc(watchMapsUrl)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-full h-80 rounded-xl overflow-hidden border border-salon-gold/25 bg-salon-noir shadow-lg">
                     <iframe
-                      src={watchMapsUrl}
+                      src={extractEmbedSrc(watchMapsUrl)}
                       width="100%"
                       height="100%"
                       style={{ border: 0 }}
                       allowFullScreen
                       loading="lazy"
-                      sandbox="allow-scripts allow-same-origin"
+                      referrerPolicy="no-referrer-when-downgrade"
                       title="Google Maps Preview"
                     />
                   </div>
