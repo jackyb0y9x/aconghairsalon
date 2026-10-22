@@ -122,7 +122,7 @@ export const DEFAULT_HAIRSTYLES = [
     "slug": "french-bob-tu-nhien",
     "summary": "Kiểu tóc Bob ngắn ngang cằm tôn nét trẻ trung hiện đại.",
     "description": "Bob ngắn là biểu tượng của vẻ đẹp thanh lịch và năng động. Đường cắt sắc sảo ngang cằm kết hợp mái bay nhẹ nhàng làm nổi bật đường xương quai hàm.",
-    "coverImageUrl": "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=800&q=80",
+    "coverImageUrl": "/uploads/hairstyles/1792569700028_Bob_Ng_n_C__T_nh_T__Nhi_n.jpg",
     "galleryImages": [
       "https://images.unsplash.com/photo-1618835962148-cf177563c6c0?auto=format&fit=crop&w=800&q=80"
     ],

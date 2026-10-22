@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
     let recentAuditLogsRaw: any[] = [];
     let recentPendingBookings: any[] = [];
 
+    let dbErrorDetail: any = null;
     try {
       [
         totalHairstyles,
@@ -109,7 +110,13 @@ export async function GET(request: NextRequest) {
           },
         }),
       ]);
-    } catch (dbError) {
+    } catch (dbError: any) {
+      dbErrorDetail = {
+        message: dbError?.message,
+        code: dbError?.code,
+        hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+        databaseUrlPrefix: process.env.DATABASE_URL ? process.env.DATABASE_URL.slice(0, 20) + '...' : null,
+      };
       console.warn('[Admin Dashboard API] Database query fallback:', dbError);
     }
 
@@ -138,6 +145,7 @@ export async function GET(request: NextRequest) {
       recentAuditLogs,
       recentPendingBookings,
       serverTime: new Date().toISOString(),
+      dbError: dbErrorDetail,
     });
   } catch (error) {
     console.error('[Admin Dashboard API Error]:', error);

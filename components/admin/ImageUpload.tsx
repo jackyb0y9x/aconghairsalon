@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Upload, X, Loader2, Image as ImageIcon, Link as LinkIcon, CheckCircle2, AlertCircle } from 'lucide-react';
+import { compressImageClient } from '@/lib/image-compressor';
 
 interface ImageUploadProps {
   value?: string;
@@ -65,8 +66,10 @@ export function ImageUpload({
     setUploadError(null);
 
     try {
+      const fileToUpload = await compressImageClient(file, 1200, 0.82);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', fileToUpload);
       formData.append('folder', folder);
 
       const res = await fetch('/api/admin/upload', {

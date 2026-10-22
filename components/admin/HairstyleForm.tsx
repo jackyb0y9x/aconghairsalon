@@ -6,6 +6,7 @@ import { Scissors, ArrowLeft, Loader2, Sparkles, Image as ImageIcon, Upload } fr
 import Link from 'next/link';
 import { slugify } from '@/lib/utils';
 import { ImageUpload } from '@/components/admin/ImageUpload';
+import { compressImageClient } from '@/lib/image-compressor';
 
 export interface HairstyleFormData {
   id?: string;
@@ -108,8 +109,10 @@ export function HairstyleForm({ initialData, categories }: Props) {
 
     setIsUploadingGallery(true);
     try {
+      const fileToUpload = await compressImageClient(file, 1200, 0.82);
+
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', fileToUpload);
       fd.append('folder', 'hairstyles');
 
       const res = await fetch('/api/admin/upload', {
@@ -228,7 +231,17 @@ export function HairstyleForm({ initialData, categories }: Props) {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text().catch(() => '');
+        if (res.status === 413 || text.includes('FUNCTION_PAYLOAD_TOO_LARGE') || text.includes('Too Large')) {
+          throw new Error('Dung lượng ảnh quá lớn vượt quá giới hạn của máy chủ. Vui lòng chọn ảnh nhỏ hơn hoặc dùng tính năng tải trực tiếp.');
+        }
+        throw new Error(text || `Lỗi máy chủ HTTP ${res.status}`);
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Lỗi khi lưu kiểu tóc');
       }
